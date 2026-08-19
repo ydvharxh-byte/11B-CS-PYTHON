@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KV Rewari — Class 11 Python Hub | CBSE Computer Science (2026-27)</title>
+    <meta name="description" content="Dedicated Python learning platform for Class 11 students of Kendriya Vidyalaya Rewari. Complete Unit 2 syllabus (45 Marks), 30-mark practicals, notes, lectures, mind maps, quizzes, and exam mode.">
+    <meta name="keywords" content="KV Rewari, Class 11 Python, CBSE Computer Science 2026-27, Unit 2 Computational Thinking, Python practical programs, Neelima Maam, Kendriya Vidyalaya Rewari">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#050811',
+                            surface: '#0A0F1D',
+                            card: '#0E1626',
+                            blue: '#0066FF',
+                            bright: '#0088FF',
+                            cyan: '#00E5FF',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="./src/styles/index.css">
+</head>
+<body class="bg-[#050811] text-slate-100 min-h-screen cyber-grid selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <!-- Sticky Header Navigation -->
+    <div id="navbar-container"></div>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="relative overflow-hidden">
+        
+        <!-- Ambient Glowing Background Spheres -->
+        <div class="hero-glow-sphere w-[600px] h-[600px] bg-blue-600/15 top-[-100px] left-[-200px]"></div>
+        <div class="hero-glow-sphere w-[500px] h-[500px] bg-cyan-500/10 top-[400px] right-[-150px]"></div>
+        <div class="hero-glow-sphere w-[700px] h-[700px] bg-indigo-600/10 bottom-[800px] left-[-200px]"></div>
+
+        <!-- 1. HERO SECTION -->
+        <section id="hero" class="relative pt-12 pb-20 lg:pt-20 lg:pb-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left Hero Content -->
+                <div class="lg:col-span-6 space-y-6 text-center lg:text-left">
+                    <!-- Small Label Badge -->
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/70 border border-blue-500/30 text-xs font-semibold text-cyan-400 shadow-lg shadow-blue-500/20">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span>KENDRIYA VIDYALAYA REWARI</span>
+                        <span class="text-slate-500">•</span>
+                        <span class="text-slate-300">CBSE CLASS XI 2026–27</span>
+                    </div>
+
+                    <!-- Main Heading -->
+                    <h1 class="font-heading text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+                        Class 11 <br>
+                        <span class="bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-400 bg-clip-text text-transparent glow-blue">
+                            Python Learning Hub
+                        </span>
+                    </h1>
+
+                    <!-- Subtitle -->
+                    <p class="text-lg sm:text-xl font-semibold text-slate-200 tracking-wide">
+                        Learn Python. Understand the Logic. Build the Skill.
+                    </p>
+
+                    <!-- Supporting Text -->
+                    <p class="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                        A dedicated learning space for Class 11 students of Kendriya Vidyalaya Rewari — lectures, notes, practice, quizzes, mind maps and revision resources in one place.
+                    </p>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                        <a href="#syllabus" class="btn-electric text-base py-3 px-6 shadow-xl shadow-blue-500/30">
+                            <span>Start Learning</span>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                        <a href="#resources" class="btn-ghost text-base py-3 px-6">
+                            <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <span>Explore Resources</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Hero Visual: Floating Coding Terminal -->
+                <div class="lg:col-span-6" id="hero-code-visual"></div>
+            </div>
+
+            <!-- Hero Information Strip -->
+            <div id="hero-info-strip"></div>
+        </section>
+
+        <!-- 2. PYTHON SYLLABUS SECTION -->
+        <section id="syllabus" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/30 text-xs font-semibold text-cyan-400 mb-3">
+                    <span>CBSE Class XI • 2026–27 (Official Unit 2)</span>
+                </div>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-3">
+                    Class 11 Python Syllabus
+                </h2>
+                <p class="text-base sm:text-lg text-cyan-400 font-medium mb-3">
+                    Computational Thinking and Programming — I <span class="text-slate-300 font-normal">(45 Marks)</span>
+                </p>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Accurately structured according to the official CBSE Class 11 Computer Science syllabus. Click any topic card to view full subtopics, built-in functions, and code examples.
+                </p>
+            </div>
+
+            <!-- Search and Category Filters -->
+            <div id="syllabus-filter-bar" class="mb-8"></div>
+
+            <!-- Syllabus Cards Grid (14 Topics) -->
+            <div id="syllabus-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- 3. RESOURCE HUB -->
+        <section id="resources" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15 relative">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/30 text-xs font-semibold text-cyan-400 mb-3">
+                    <span>Centralized Google Drive Resource Hub</span>
+                </div>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-3">
+                    Everything You Need to Master Python
+                </h2>
+                <p class="text-sm sm:text-base text-slate-400">
+                    One-click access to curated study materials, visual revision aids, video lessons, and practical worksheets.
+                </p>
+            </div>
+
+            <div id="resource-hub-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- 4. 5-STEP LEARNING PATH -->
+        <section id="learning-path" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span class="badge-blue text-xs mb-3">Structured Methodology</span>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-3">
+                    Your 5-Step Python Mastery Path
+                </h2>
+                <p class="text-sm sm:text-base text-slate-400">
+                    Follow this proven sequential workflow to excel in CBSE theory exams, practical lab tests, and project development.
+                </p>
+            </div>
+
+            <!-- Horizontal Flow Pipeline with Glowing Lines -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+                
+                <!-- Step 1 -->
+                <div class="glass-card p-5 text-center flex flex-col items-center justify-between relative group border-blue-500/20 hover:border-cyan-400">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xl mb-3 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                        🎥
+                    </div>
+                    <div class="font-mono text-xs font-bold text-cyan-400 mb-1">01 • STEP</div>
+                    <div class="font-heading text-lg font-bold text-white mb-1">WATCH</div>
+                    <p class="text-xs text-slate-400 leading-relaxed">Recorded video lectures & step-by-step concept explainers.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="glass-card p-5 text-center flex flex-col items-center justify-between relative group border-blue-500/20 hover:border-cyan-400">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xl mb-3 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                        💡
+                    </div>
+                    <div class="font-mono text-xs font-bold text-cyan-400 mb-1">02 • STEP</div>
+                    <div class="font-heading text-lg font-bold text-white mb-1">UNDERSTAND</div>
+                    <p class="text-xs text-slate-400 leading-relaxed">Read NCERT notes, trace flowcharts & explore mind maps.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="glass-card p-5 text-center flex flex-col items-center justify-between relative group border-blue-500/20 hover:border-cyan-400">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xl mb-3 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                        💻
+                    </div>
+                    <div class="font-mono text-xs font-bold text-cyan-400 mb-1">03 • STEP</div>
+                    <div class="font-heading text-lg font-bold text-white mb-1">PRACTICE</div>
+                    <p class="text-xs text-slate-400 leading-relaxed">Write, execute & debug all 20 official syllabus programs.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="glass-card p-5 text-center flex flex-col items-center justify-between relative group border-blue-500/20 hover:border-cyan-400">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xl mb-3 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                        📝
+                    </div>
+                    <div class="font-mono text-xs font-bold text-cyan-400 mb-1">04 • STEP</div>
+                    <div class="font-heading text-lg font-bold text-white mb-1">TEST</div>
+                    <p class="text-xs text-slate-400 leading-relaxed">Self-assess with output prediction and error finding quizzes.</p>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="glass-card p-5 text-center flex flex-col items-center justify-between relative group border-blue-500/20 hover:border-cyan-400">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xl mb-3 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                        🧠
+                    </div>
+                    <div class="font-mono text-xs font-bold text-cyan-400 mb-1">05 • STEP</div>
+                    <div class="font-heading text-lg font-bold text-white mb-1">REVISE</div>
+                    <p class="text-xs text-slate-400 leading-relaxed">Review syntax cheat sheets & 1-day exam capsules before tests.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 5. EXAM MODE ⚡ -->
+        <section id="exam-mode" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-semibold text-amber-300 mb-3">
+                    <span>⚡ Rapid Recall & Score Booster</span>
+                </div>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-3">
+                    Exam Mode <span class="text-amber-400">⚡</span>
+                </h2>
+                <p class="text-sm sm:text-base text-slate-400">
+                    Everything you need for quick revision, high-yield practice, and zero-anxiety CBSE exam prep.
+                </p>
+            </div>
+
+            <div id="exam-mode-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- 6. INTERACTIVE QUIZ PREVIEW -->
+        <section id="quiz" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="badge-cyan text-xs mb-3">Live Interactive Quiz</span>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-3">
+                    Test Your Python Logic ⚡
+                </h2>
+                <p class="text-sm sm:text-base text-slate-400">
+                    Practice predicting code output, tracing variables, and catching runtime errors.
+                </p>
+            </div>
+
+            <div class="max-w-3xl mx-auto" id="interactive-quiz-container"></div>
+        </section>
+
+        <!-- 7. PYTHON PRACTICAL LAB & IMPORTANT PROGRAMS -->
+        <section id="practicals" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-300 mb-3">
+                    <span>🧪 Official 30 Marks Practical Framework</span>
+                </div>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-3">
+                    Python Practical Lab
+                </h2>
+                <p class="text-sm sm:text-base text-slate-400">
+                    Practice the programs you may actually need for your practical and project.
+                </p>
+            </div>
+
+            <!-- Practical Structure (12M Lab Test, 10M File+Viva, 8M Project) -->
+            <div id="practical-structure-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16"></div>
+
+            <!-- Suggested Practical Programs Heading -->
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <h3 class="font-heading text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Official CBSE Practical Programs (20+ Solved)
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-400">
+                    Filter and view verified Python solutions with code explanations, sample inputs, and outputs.
+                </p>
+            </div>
+
+            <!-- Practical Search and Category Filters -->
+            <div id="practical-filter-bar"></div>
+
+            <!-- Practical Programs Grid -->
+            <div id="practical-programs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- 8. TEACHER SECTION -->
+        <section id="teacher" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="badge-blue text-xs mb-3">Faculty & Mentorship</span>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-3">
+                    Meet Your Teacher
+                </h2>
+                <p class="text-sm sm:text-base text-slate-400">
+                    Guiding Class 11 students toward algorithmic excellence and strong fundamentals in Computer Science.
+                </p>
+            </div>
+
+            <div class="max-w-4xl mx-auto" id="teacher-profile-container"></div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <div id="footer-container"></div>
+
+    <!-- MODAL ROOT (For Topic details, Practical code, Exam cards, and Coming Soon links) -->
+    <div id="modal-root"></div>
+
+    <!-- Core App Logic (ES Module) -->
+    <script type="module" src="./src/app.js"></script>
+</body>
+</html>
