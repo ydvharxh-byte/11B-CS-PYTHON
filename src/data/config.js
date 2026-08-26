@@ -15,7 +15,7 @@
 
 export const resourceLinks = {
     // Core Resource Hub Links
-    dailyQuiz: "https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=drive_link", // 🔥 Daily quiz Google Drive link
+    dailyQuiz: "https://drive.google.com/file/d/1KssOrYfMq4mmpj1Af2SavUHfX7o56t8M/view?usp=sharing", // 🔥 Daily quiz Google Drive link
     lectures: "",            // 🎥 Topic-wise recorded lectures
     notes: "",               // 📚 Class notes, revision notes and PDFs
     animatedNotes: "",       // ⚡ Animated visual short notes
