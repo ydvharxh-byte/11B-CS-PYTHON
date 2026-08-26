@@ -124,6 +124,9 @@ function renderNavbar() {
                         <a href="#exam-mode" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10 flex items-center gap-1">
                             Exam Mode <span class="text-xs text-amber-400">⚡</span>
                         </a>
+                        <a href="#daily-quiz" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10 flex items-center gap-1">
+                            Daily Quiz <span class="text-xs text-amber-400">🔥</span>
+                        </a>
                         <a href="#quiz" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Quiz</a>
                         <a href="#practicals" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Practical</a>
                         <a href="#teacher" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Teacher</a>
@@ -160,6 +163,7 @@ function renderNavbar() {
                 <a href="#resources" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Resource Hub</a>
                 <a href="#learning-path" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">5-Step Learning Path</a>
                 <a href="#exam-mode" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Exam Mode ⚡</a>
+                <a href="#daily-quiz" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Daily Quiz 🔥</a>
                 <a href="#quiz" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Interactive Quiz Preview</a>
                 <a href="#practicals" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Python Practical Lab (30M)</a>
                 <a href="#teacher" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Meet Teacher (Neelima Ma'am)</a>
@@ -1211,6 +1215,7 @@ function renderFooter() {
                             <li><a href="#resources" class="hover:text-cyan-400 transition-colors">Resource Hub (Lectures & Notes)</a></li>
                             <li><a href="#learning-path" class="hover:text-cyan-400 transition-colors">5-Step Learning Path</a></li>
                             <li><a href="#exam-mode" class="hover:text-cyan-400 transition-colors">Exam Mode ⚡ Quick Revision</a></li>
+                            <li><a href="#daily-quiz" class="hover:text-cyan-400 transition-colors">Daily Quiz 🔥 & Streak</a></li>
                             <li><a href="#quiz" class="hover:text-cyan-400 transition-colors">Interactive Quiz Preview</a></li>
                             <li><a href="#practicals" class="hover:text-cyan-400 transition-colors">Practical Lab & 20+ Programs</a></li>
                             <li><a href="#teacher" class="hover:text-cyan-400 transition-colors">Meet Neelima Ma'am</a></li>
@@ -1289,6 +1294,7 @@ window.openResource = (key) => {
 
 window.openComingSoonModal = (key) => {
     const resourceNames = {
+        dailyQuiz: "Daily Class 11 Python Quiz (Google Drive)",
         lectures: "Recorded Video Lectures",
         notes: "Class Notes & Revision PDFs",
         animatedNotes: "Animated Short Notes",

@@ -84,10 +84,14 @@
                     <!-- Supporting Text -->
                     <p class="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
                         A dedicated learning space for Class 11 students of Kendriya Vidyalaya Rewari — lectures, notes, practice, quizzes, mind maps and revision resources in one place.
-                    </p>
-
-                    <!-- Action Buttons -->
+                                      <!-- Action Buttons -->
                     <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                        <button onclick="window.openResource('dailyQuiz')" class="btn-electric text-base py-3 px-6 shadow-xl shadow-amber-500/30 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 border-amber-400/40 hover:from-amber-400 hover:to-orange-500">
+                            <span>🔥 Daily Quiz</span>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </button>
                         <a href="#syllabus" class="btn-electric text-base py-3 px-6 shadow-xl shadow-blue-500/30">
                             <span>Start Learning</span>
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,11 +100,11 @@
                         </a>
                         <a href="#resources" class="btn-ghost text-base py-3 px-6">
                             <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 01-2-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                             <span>Explore Resources</span>
                         </a>
-                    </div>
+                    </div>  </div>
                 </div>
 
                 <!-- Right Hero Visual: Floating Coding Terminal -->
@@ -109,6 +113,34 @@
 
             <!-- Hero Information Strip -->
             <div id="hero-info-strip"></div>
+        </section>
+
+        <!-- 1.5 DAILY QUIZ SECTION (NEAR TOP) -->
+        <section id="daily-quiz" class="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-blue-500/15">
+            <div class="glass-card p-6 sm:p-8 border-amber-500/30 bg-gradient-to-r from-[#070D1F] via-[#0B152E] to-[#070D1F] relative overflow-hidden shadow-2xl">
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+                    <div class="space-y-3 text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-xs font-bold text-amber-300 shadow-md">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <span>🔥 DAILY QUIZ & GOOGLE DRIVE TESTS</span>
+                        </div>
+                        <h2 class="font-heading text-2xl sm:text-3xl font-extrabold text-white">
+                            Daily Class 11 Python Quiz
+                        </h2>
+                        <p class="text-sm text-slate-300 max-w-2xl leading-relaxed">
+                            Access daily quiz questions, Google Form test papers, and daily practice worksheets uploaded directly to Google Drive by Neelima Ma'am.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                        <button onclick="window.openResource('dailyQuiz')" class="btn-electric text-sm py-3.5 px-7 w-full sm:w-auto justify-center bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 border-amber-400/40 shadow-xl shadow-amber-500/25 hover:scale-105 transition-all">
+                            <span>Open Daily Quiz (Google Drive) ↗</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- 2. PYTHON SYLLABUS SECTION -->
