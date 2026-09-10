@@ -9,6 +9,7 @@ import { practicalStructure, practicalPrograms, practicalCategories } from './da
 import { quizQuestions } from './data/quizData.js';
 import { examModeCards } from './data/examModeData.js';
 import { coreResources } from './data/resources.js';
+import { getStoredLeaderboard, saveStoredLeaderboard, resetStoredLeaderboard, leaderboardConfig } from './data/leaderboardData.js';
 
 // State Management
 const appState = {
@@ -23,7 +24,8 @@ const appState = {
     practicalSearchQuery: "",
     practicalFilter: "All",
     activeHeroCodeTab: "main",
-    heroTerminalOutput: null
+    heroTerminalOutput: null,
+    leaderboard: getStoredLeaderboard()
 };
 
 // Hero Code Snippets
@@ -74,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderNavbar();
     renderHeroInfo();
     renderHeroCode();
+    renderLeaderboardShowcase();
     renderSyllabusFilters();
     renderSyllabusCards();
     renderResourceHub();
@@ -84,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFooter();
     setupGlobalEventListeners();
     setupScrollSpy();
+    checkSecretAdminUrl();
 });
 
 // 1. Navigation Controller
@@ -92,59 +96,64 @@ function renderNavbar() {
     if (!navContainer) return;
 
     navContainer.innerHTML = `
-        <header class="sticky top-0 z-50 bg-[#050811]/90 backdrop-blur-xl border-b border-blue-500/20 transition-all duration-300">
+        <header class="sticky top-0 z-50 cyber-navbar transition-all duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
-                    <!-- Brand / Logo -->
-                    <a href="#hero" class="flex items-center gap-3 group">
-                        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 p-[2px] shadow-lg shadow-blue-500/30 group-hover:shadow-cyan-400/50 transition-all duration-300">
-                            <div class="w-full h-full bg-[#070B16] rounded-[10px] flex items-center justify-center">
-                                <svg class="w-6 h-6 text-cyan-400 group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                </svg>
+                <div class="flex items-center justify-between h-18 lg:h-20 py-2">
+                    
+                    <!-- Brand / Logo (Triple click triggers Secret Admin Portal) -->
+                    <div id="brand-logo-secret" onclick="window.handleLogoSecretClick(event)" class="brand-cyber-logo flex items-center gap-3 group select-none cursor-pointer" title="KV Rewari Class 11 Python Hub (Triple-click for Secret Teacher Portal)">
+                        <div class="relative">
+                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-cyan-400 to-indigo-500 p-[2px] shadow-lg shadow-cyan-500/25 group-hover:shadow-cyan-400/50 transition-all duration-300">
+                                <div class="w-full h-full bg-[#070B16] rounded-[9px] flex items-center justify-center">
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                            </span>
+                        </div>
+                        <div class="pointer-events-none">
+                            <div class="font-heading text-base sm:text-lg font-black tracking-wider text-white group-hover:text-cyan-400 transition-colors flex items-center gap-1.5 leading-tight">
+                                <span>KV REWARI</span>
+                            </div>
+                            <div class="text-[10px] sm:text-[11px] font-bold tracking-widest text-cyan-400/90 flex items-center gap-1.5 leading-tight">
+                                <span>CLASS 11 PYTHON HUB</span>
                             </div>
                         </div>
-                        <div>
-                            <div class="font-heading text-lg font-black tracking-wider text-white group-hover:text-cyan-400 transition-colors">
-                                KV REWARI
-                            </div>
-                            <div class="text-[11px] font-semibold tracking-widest text-cyan-400 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                                CLASS 11 PYTHON HUB
-                            </div>
-                        </div>
-                    </a>
+                    </div>
 
-                    <!-- Desktop Navigation Links -->
-                    <nav class="hidden md:flex items-center gap-1 lg:gap-2">
-                        <a href="#hero" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Home</a>
-                        <a href="#syllabus" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Syllabus</a>
-                        <a href="#resources" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Resources</a>
-                        <a href="#learning-path" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Path</a>
-                        <a href="#exam-mode" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10 flex items-center gap-1">
-                            Exam Mode <span class="text-xs text-amber-400">⚡</span>
-                        </a>
-                        <a href="#daily-quiz" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10 flex items-center gap-1">
-                            Daily Quiz <span class="text-xs text-amber-400">🔥</span>
-                        </a>
-                        <a href="#quiz" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Quiz</a>
-                        <a href="#practicals" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Practical</a>
-                        <a href="#teacher" class="nav-link px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors rounded-lg hover:bg-blue-500/10">Teacher</a>
-                    </nav>
+                    <!-- Desktop Central Cyber Dock Navigation -->
+                    <div class="hidden lg:flex items-center justify-center">
+                        <nav class="cyber-nav-dock">
+                            <a href="#hero" class="cyber-nav-link active-nav-pill">Home</a>
+                            <a href="#daily-quiz" class="cyber-nav-link"><span>Daily Quiz</span><span class="text-xs">🔥</span></a>
+                            <a href="#interactive-terminal" class="cyber-nav-link"><span>Code Lab</span><span class="text-xs">💻</span></a>
+                            <a href="#syllabus" class="cyber-nav-link">Syllabus</a>
+                            <a href="#resources" class="cyber-nav-link">Resources</a>
+                            <a href="#learning-path" class="cyber-nav-link">Path</a>
+                            <a href="#exam-mode" class="cyber-nav-link"><span>Exam Mode</span><span class="text-xs text-amber-400">⚡</span></a>
+                            <a href="#quiz" class="cyber-nav-link">Quiz</a>
+                            <a href="#practicals" class="cyber-nav-link">Practical</a>
+                            <a href="#teacher" class="cyber-nav-link">Teacher</a>
+                        </nav>
+                    </div>
 
                     <!-- Right CTA -->
                     <div class="hidden sm:flex items-center gap-3">
-                        <a href="#syllabus" class="btn-electric text-sm py-2.5 px-5">
+                        <a href="#syllabus" class="btn-header-cta group">
                             <span>Start Learning</span>
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            <svg class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                         </a>
                     </div>
 
                     <!-- Mobile Hamburger Button -->
-                    <div class="flex md:hidden">
-                        <button id="mobile-menu-btn" class="p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-slate-200 hover:text-cyan-400 focus:outline-none" aria-label="Toggle Menu">
+                    <div class="flex lg:hidden">
+                        <button id="mobile-menu-btn" class="p-2.5 rounded-xl bg-blue-950/50 border border-cyan-500/30 text-slate-200 hover:text-cyan-400 focus:outline-none" aria-label="Toggle Menu">
                             <svg id="hamburger-icon" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
                             </svg>
@@ -157,18 +166,20 @@ function renderNavbar() {
             </div>
 
             <!-- Mobile Drawer -->
-            <div id="mobile-menu-drawer" class="hidden md:hidden border-b border-blue-500/20 bg-[#070B16]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-2">
-                <a href="#hero" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Home</a>
-                <a href="#syllabus" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Class 11 Syllabus (Unit 2)</a>
-                <a href="#resources" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Resource Hub</a>
-                <a href="#learning-path" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">5-Step Learning Path</a>
-                <a href="#exam-mode" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Exam Mode ⚡</a>
-                <a href="#daily-quiz" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Daily Quiz 🔥</a>
-                <a href="#quiz" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Interactive Quiz Preview</a>
-                <a href="#practicals" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Python Practical Lab (30M)</a>
-                <a href="#teacher" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Meet Teacher (Neelima Ma'am)</a>
-                <div class="pt-4">
-                    <a href="#syllabus" class="btn-electric w-full justify-center py-3">
+            <div id="mobile-menu-drawer" class="hidden lg:hidden border-b border-blue-500/25 bg-[#070B16]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-2">
+                <a href="#hero" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Home</a>
+                <a href="#hero" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-amber-400 font-bold">🏆 Daily Leaderboard</a>
+                <a href="#daily-quiz" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Daily Quiz 🔥</a>
+                <a href="#interactive-terminal" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Python Code Lab 💻</a>
+                <a href="#syllabus" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Class 11 Syllabus (Unit 2)</a>
+                <a href="#resources" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Resource Hub</a>
+                <a href="#learning-path" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">5-Step Learning Path</a>
+                <a href="#exam-mode" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Exam Mode ⚡</a>
+                <a href="#quiz" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Interactive Quiz Preview</a>
+                <a href="#practicals" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Python Practical Lab (30M)</a>
+                <a href="#teacher" class="mobile-nav-link block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-blue-600/20 hover:text-cyan-400">Meet Teacher (Neelima Ma'am)</a>
+                <div class="pt-3">
+                    <a href="#syllabus" class="btn-header-cta w-full justify-center py-2.5">
                         <span>Start Learning →</span>
                     </a>
                 </div>
@@ -367,6 +378,145 @@ function highlightPythonSyntax(code) {
 
         return formatted;
     }).join('\n');
+}
+
+// 3.5 Daily Quiz Leaderboard Showcase Controller (Hero Right Column)
+function renderLeaderboardShowcase() {
+    const container = document.getElementById('leaderboard-showcase-container');
+    if (!container) return;
+
+    const lb = appState.leaderboard || getStoredLeaderboard();
+    const hasImage = Boolean(lb.imageUrl && lb.imageUrl.trim() !== "");
+
+    container.innerHTML = `
+        <div class="leaderboard-glow-card p-5 sm:p-6 relative overflow-hidden shadow-2xl border-amber-500/30">
+            <!-- Background Ambient Glow -->
+            <div class="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Top Header Bar -->
+            <div class="flex items-start justify-between gap-3 pb-4 mb-4 border-b border-blue-500/20 relative z-10">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[11px] font-bold text-amber-300 shadow-md mb-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>🏆 DAILY QUIZ LEADERBOARD</span>
+                    </div>
+                    <h2 class="font-heading text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+                        ${lb.title || "Daily Python Quiz — Leaderboard"}
+                    </h2>
+                    <div class="text-[11px] text-slate-300 mt-1 flex flex-wrap items-center gap-1.5 font-mono">
+                        <span class="text-cyan-400 font-semibold">📌 ${lb.topic || "Python (Unit 2)"}</span>
+                        <span class="text-slate-500">•</span>
+                        <span class="text-amber-300">📅 ${lb.date || "Today"}</span>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                    ${hasImage ? `
+                        <button onclick="window.openLeaderboardLightbox()" class="btn-ghost text-xs py-1.5 px-2.5 border-cyan-500/40 text-cyan-300 hover:text-white flex items-center gap-1 shadow-md" title="Full Screen View">
+                            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                            </svg>
+                            <span class="hidden sm:inline">Zoom</span>
+                        </button>
+                        <button onclick="window.downloadLeaderboardImage()" class="btn-electric text-xs py-1.5 px-2.5 bg-gradient-to-r from-amber-500 to-orange-500 border-amber-400/40 shadow-md" title="Download Image">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span class="hidden sm:inline">PNG</span>
+                        </button>
+                    ` : `
+                        <button onclick="window.openResource('dailyQuiz')" class="btn-electric text-xs py-1.5 px-3 bg-gradient-to-r from-amber-500 to-orange-500 border-amber-400/40">
+                            <span>Quiz ↗</span>
+                        </button>
+                    `}
+                </div>
+            </div>
+
+            <!-- Main Showcase Area: Image Display vs Placeholder -->
+            ${hasImage ? `
+                <div class="space-y-4 relative z-10">
+                    <!-- High-Res Image Display Container with Lightbox Trigger -->
+                    <div class="leaderboard-img-container cursor-pointer group max-h-72 overflow-hidden rounded-xl border border-amber-500/30 shadow-lg" onclick="window.openLeaderboardLightbox()" title="Click to view full high-resolution image">
+                        <img id="active-leaderboard-img" src="${lb.imageUrl}" alt="Daily Quiz Leaderboard" class="w-full object-cover max-h-72" />
+                        
+                        <!-- Hover Overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#050811]/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-3">
+                            <span class="text-xs font-semibold text-cyan-300 flex items-center gap-1.5 bg-[#070B18]/90 px-2.5 py-1 rounded-lg border border-cyan-500/30">
+                                <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Click to View Full Size
+                            </span>
+                            <span class="text-xs font-mono text-amber-300 bg-[#070B18]/90 px-2 py-1 rounded-lg border border-amber-500/30 flex items-center gap-1">
+                                <span>📸</span> Leaderboard PNG
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Top 3 Podium Cards (Compact 3-column strip) -->
+                    <div class="grid grid-cols-3 gap-2">
+                        ${(lb.topRankers || []).slice(0, 3).map((r, i) => `
+                            <div class="podium-card ${r.rank === 1 ? 'podium-gold' : r.rank === 2 ? 'podium-silver' : 'podium-bronze'} p-2 text-center rounded-xl">
+                                <div class="text-base">${r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : '🥉'}</div>
+                                <div class="text-xs font-bold text-white font-heading truncate mt-0.5">${r.name || ('Rank ' + r.rank)}</div>
+                                <div class="text-[10px] text-cyan-400 font-mono">${r.score || (r.rank === 1 ? 'Rank 1' : r.rank === 2 ? 'Rank 2' : 'Rank 3')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Teacher's Note Card -->
+                    ${lb.teacherNote ? `
+                        <div class="p-2.5 rounded-xl border border-blue-500/20 bg-[#050914]/80 text-left flex items-start gap-2 text-[11px] text-slate-300 leading-relaxed">
+                            <span class="text-sm">👩‍🏫</span>
+                            <p class="truncate-2-lines">"${lb.teacherNote}"</p>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : `
+                <!-- Fallback / Waiting for Upload State -->
+                <div class="space-y-4 relative z-10 text-center py-4">
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/20">
+                        🏆
+                    </div>
+                    
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/80 border border-blue-500/30 text-xs text-cyan-400 mb-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                            <span>Awaiting Today's Results</span>
+                        </div>
+                        <h3 class="font-heading text-lg sm:text-xl font-bold text-white">
+                            Today's Leaderboard Coming Shortly
+                        </h3>
+                        <p class="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+                            The official daily quiz champions PNG will be published right here after submissions are reviewed!
+                        </p>
+                    </div>
+
+                    <!-- Demo Podium Strip -->
+                    <div class="grid grid-cols-3 gap-2 pt-1 max-w-sm mx-auto">
+                        <div class="podium-card podium-silver p-2 text-center rounded-xl">
+                            <div class="text-base">🥈</div>
+                            <div class="text-[11px] font-bold text-slate-200 mt-0.5">Rank 2</div>
+                            <div class="text-[9px] text-slate-400 font-mono">Runner-Up</div>
+                        </div>
+                        <div class="podium-card podium-gold p-2 text-center rounded-xl -translate-y-1 shadow-md shadow-amber-500/20">
+                            <div class="text-lg">🥇</div>
+                            <div class="text-[11px] font-bold text-amber-300 mt-0.5">Rank 1</div>
+                            <div class="text-[9px] text-amber-400 font-mono">Champion</div>
+                        </div>
+                        <div class="podium-card podium-bronze p-2 text-center rounded-xl">
+                            <div class="text-base">🥉</div>
+                            <div class="text-[11px] font-bold text-slate-200 mt-0.5">Rank 3</div>
+                            <div class="text-[9px] text-slate-400 font-mono">Third</div>
+                        </div>
+                    </div>
+                </div>
+            `}
+        </div>
+    `;
 }
 
 // 4. Syllabus Section
@@ -1374,25 +1524,528 @@ window.copyToClipboard = (text, btnElement) => {
     });
 };
 
-// Global Event Listeners & ESC Key to close modals
+// ==========================================
+// LEADERBOARD LIGHTBOX & DOWNLOAD HANDLERS
+// ==========================================
+window.openLeaderboardLightbox = () => {
+    const lb = appState.leaderboard || getStoredLeaderboard();
+    if (!lb.imageUrl) return;
+
+    const modalContainer = document.getElementById('modal-root');
+    if (!modalContainer) return;
+
+    modalContainer.innerHTML = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 modal-overlay" onclick="window.handleModalBackdropClick(event)">
+            <div class="lightbox-modal-content relative glass-card bg-[#050811]/98 border-cyan-500/40 p-4 sm:p-6 rounded-2xl shadow-2xl animate-modal-pop">
+                
+                <!-- Modal Top Controls -->
+                <div class="w-full flex items-center justify-between pb-3 mb-3 border-b border-blue-500/20">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🏆</span>
+                        <div>
+                            <h3 class="font-heading text-sm sm:text-base font-bold text-white">${lb.title || "Daily Quiz Leaderboard"}</h3>
+                            <p class="text-[11px] text-slate-400 font-mono">${lb.topic || "Python Unit 2"} • ${lb.date || "Today"}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.downloadLeaderboardImage()" class="btn-electric text-xs py-1.5 px-3 bg-gradient-to-r from-amber-500 to-orange-500 border-amber-400/40">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span class="hidden sm:inline">Download</span>
+                        </button>
+                        <button onclick="window.closeModal()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-red-500/30 text-slate-300 hover:text-white transition-all" title="Close">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lightbox Image Wrapper -->
+                <div class="lightbox-img-wrapper w-full flex items-center justify-center bg-[#02050D] p-2">
+                    <img src="${lb.imageUrl}" alt="Leaderboard Full Size" class="rounded-lg max-h-[75vh] object-contain shadow-2xl" />
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.classList.add('overflow-hidden');
+};
+
+window.downloadLeaderboardImage = () => {
+    const lb = appState.leaderboard || getStoredLeaderboard();
+    if (!lb.imageUrl) return;
+
+    const link = document.createElement('a');
+    link.href = lb.imageUrl;
+    const sanitizedTitle = (lb.title || "Class11_Python_Leaderboard").replace(/[^a-zA-Z0-9_-]/g, "_");
+    link.download = `${sanitizedTitle}_${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+// ==========================================
+// SECRET ADMIN PORTAL & AUTHENTICATION
+// ==========================================
+let logoClickCount = 0;
+let logoClickResetTimer = null;
+
+window.handleLogoSecretClick = (event) => {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    logoClickCount++;
+    clearTimeout(logoClickResetTimer);
+
+    // Visual tactile feedback on logo badge
+    const logoEl = document.getElementById('brand-logo-secret');
+    if (logoEl) {
+        logoEl.classList.remove('logo-click-feedback');
+        void logoEl.offsetWidth; // trigger reflow
+        logoEl.classList.add('logo-click-feedback');
+    }
+
+    // Trigger on 3 clicks or native triple-click event
+    if (logoClickCount >= 3 || (event && event.detail >= 3)) {
+        logoClickCount = 0;
+        clearTimeout(logoClickResetTimer);
+        window.openSecretAdminAuthModal();
+        return false;
+    } else {
+        // Generous 2.5s window so user doesn't get timed out easily
+        logoClickResetTimer = setTimeout(() => {
+            logoClickCount = 0;
+        }, 2500);
+    }
+};
+
+function checkSecretAdminUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === 'leaderboard' || window.location.hash === '#admin-leaderboard') {
+        window.openSecretAdminAuthModal();
+    }
+}
+
+window.openSecretAdminAuthModal = () => {
+    const modalContainer = document.getElementById('modal-root');
+    if (!modalContainer) return;
+
+    modalContainer.innerHTML = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay" onclick="window.handleModalBackdropClick(event)">
+            <div id="secret-pin-card" class="relative w-full max-w-sm glass-card bg-[#070C1B]/95 border-cyan-500/40 p-6 sm:p-8 rounded-2xl shadow-2xl animate-modal-pop text-center">
+                
+                <!-- Secret Icon -->
+                <div class="w-16 h-16 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-3xl mx-auto mb-4 text-cyan-400 shadow-lg shadow-cyan-500/20">
+                    🔐
+                </div>
+
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-[11px] font-mono font-bold text-cyan-300 mb-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                    <span>ADMIN PORTAL</span>
+                </div>
+
+                <h3 class="font-heading text-xl font-bold text-white mb-1">Teacher / Admin Access</h3>
+                <p class="text-xs text-slate-400 mb-6">
+                    Enter the secret 4-digit passcode to open the Leaderboard PNG upload console.
+                </p>
+
+                <!-- PIN Input Form -->
+                <form onsubmit="window.handlePinSubmit(event)" class="space-y-5">
+                    <div class="flex items-center justify-center gap-3" id="pin-inputs-container">
+                        <input type="password" maxlength="1" class="secret-pin-box" id="pin-1" autofocus oninput="window.handlePinInput(this, 'pin-2')" onkeydown="window.handlePinBackspace(this, event, null)" />
+                        <input type="password" maxlength="1" class="secret-pin-box" id="pin-2" oninput="window.handlePinInput(this, 'pin-3')" onkeydown="window.handlePinBackspace(this, event, 'pin-1')" />
+                        <input type="password" maxlength="1" class="secret-pin-box" id="pin-3" oninput="window.handlePinInput(this, 'pin-4')" onkeydown="window.handlePinBackspace(this, event, 'pin-2')" />
+                        <input type="password" maxlength="1" class="secret-pin-box" id="pin-4" oninput="window.handlePinInput(this, null)" onkeydown="window.handlePinBackspace(this, event, 'pin-3')" />
+                    </div>
+
+                    <div id="pin-error-msg" class="text-xs text-red-400 font-semibold min-h-[18px]"></div>
+
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="window.closeModal()" class="btn-ghost w-1/2 text-xs py-2.5">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn-electric w-1/2 text-xs font-semibold py-2.5">
+                            Verify PIN →
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 pt-4 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+                    Hint: Default PIN is <span class="text-cyan-400">1108</span>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.classList.add('overflow-hidden');
+
+    setTimeout(() => {
+        const firstInput = document.getElementById('pin-1');
+        if (firstInput) firstInput.focus();
+    }, 100);
+};
+
+window.handlePinInput = (element, nextId) => {
+    if (element.value.length >= 1) {
+        element.value = element.value.slice(-1);
+        if (nextId) {
+            const nextEl = document.getElementById(nextId);
+            if (nextEl) nextEl.focus();
+        }
+    }
+};
+
+window.handlePinBackspace = (element, event, prevId) => {
+    if (event.key === 'Backspace' && !element.value && prevId) {
+        const prevEl = document.getElementById(prevId);
+        if (prevEl) {
+            prevEl.focus();
+            prevEl.value = '';
+        }
+    }
+};
+
+window.handlePinSubmit = (e) => {
+    if (e) e.preventDefault();
+    const p1 = document.getElementById('pin-1')?.value || '';
+    const p2 = document.getElementById('pin-2')?.value || '';
+    const p3 = document.getElementById('pin-3')?.value || '';
+    const p4 = document.getElementById('pin-4')?.value || '';
+    const enteredPin = `${p1}${p2}${p3}${p4}`;
+
+    if (enteredPin === leaderboardConfig.adminPin || enteredPin === "1108") {
+        window.openLeaderboardUploadModal();
+    } else {
+        const card = document.getElementById('secret-pin-card');
+        const errMsg = document.getElementById('pin-error-msg');
+        if (card) {
+            card.classList.remove('animate-shake');
+            void card.offsetWidth;
+            card.classList.add('animate-shake');
+        }
+        if (errMsg) {
+            errMsg.innerText = "✖ Incorrect Passcode! Access Denied.";
+        }
+        ['pin-1', 'pin-2', 'pin-3', 'pin-4'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const firstEl = document.getElementById('pin-1');
+        if (firstEl) firstEl.focus();
+    }
+};
+
+// ==========================================
+// SECRET LEADERBOARD PNG UPLOAD MODAL
+// ==========================================
+let tempUploadedImageData = null;
+
+window.openLeaderboardUploadModal = () => {
+    const lb = appState.leaderboard || getStoredLeaderboard();
+    tempUploadedImageData = lb.imageUrl || null;
+
+    const modalContainer = document.getElementById('modal-root');
+    if (!modalContainer) return;
+
+    modalContainer.innerHTML = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 modal-overlay overflow-y-auto" onclick="window.handleModalBackdropClick(event)">
+            <div class="relative w-full max-w-2xl glass-card bg-[#070B18]/98 border-amber-500/40 p-6 sm:p-8 rounded-2xl shadow-2xl animate-modal-pop my-auto text-left max-h-[90vh] overflow-y-auto">
+                
+                <!-- Header -->
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-blue-500/20">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl text-amber-400">
+                            📤
+                        </div>
+                        <div>
+                            <h3 class="font-heading text-lg sm:text-xl font-bold text-white">Daily Quiz Leaderboard Publisher</h3>
+                            <p class="text-xs text-slate-400">Upload and showcase daily quiz leaderboard PNG directly on the website</p>
+                        </div>
+                    </div>
+                    <button onclick="window.closeModal()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-red-500/30 text-slate-300 hover:text-white transition-all" title="Close">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Dropzone Area -->
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">1. Upload Leaderboard PNG / Image</label>
+                    <div id="upload-dropzone" class="upload-dropzone" onclick="document.getElementById('leaderboard-file-input').click()">
+                        <input type="file" id="leaderboard-file-input" accept="image/png, image/jpeg, image/webp" class="hidden" onchange="window.handleFileSelect(event)" />
+                        <div class="flex flex-col items-center justify-center gap-2">
+                            <div class="w-12 h-12 rounded-xl bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-2xl text-cyan-400 shadow-md">
+                                🖼️
+                            </div>
+                            <div class="text-sm font-bold text-white">Drag & drop your Leaderboard PNG here or <span class="text-cyan-400 underline">Browse</span></div>
+                            <p class="text-xs text-slate-400">Supports PNG, JPG, WebP (Any resolution or aspect ratio)</p>
+                        </div>
+                    </div>
+
+                    <!-- Live Image Preview Box -->
+                    <div id="image-preview-wrapper" class="${tempUploadedImageData ? '' : 'hidden'} mt-3 p-3 bg-[#040711] border border-cyan-500/30 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <img id="upload-preview-thumb" src="${tempUploadedImageData || ''}" alt="Preview" class="w-14 h-14 object-cover rounded-lg border border-cyan-400/40" />
+                            <div class="truncate">
+                                <div class="text-xs font-bold text-white">Leaderboard Image Ready</div>
+                                <div class="text-[11px] text-emerald-400 font-mono">✔ Image Loaded Successfully</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.removeSelectedImage()" class="text-xs text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30">
+                            Remove Image
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Leaderboard Metadata Form -->
+                <form onsubmit="window.saveAndPublishLeaderboard(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Quiz Topic / Title</label>
+                            <input type="text" id="admin-lb-title" value="${lb.title || 'Daily Python Quiz — Championship Leaderboard'}" class="w-full px-3.5 py-2.5 rounded-xl bg-[#050811] border border-blue-500/30 text-white text-xs font-medium focus:border-cyan-400 focus:outline-none" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Date / Quiz Number</label>
+                            <input type="text" id="admin-lb-date" value="${lb.date === 'Today' ? new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : (lb.date || '')}" class="w-full px-3.5 py-2.5 rounded-xl bg-[#050811] border border-blue-500/30 text-white text-xs font-medium focus:border-cyan-400 focus:outline-none" required />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-amber-300 mb-1">🥇 1st Rank Champion</label>
+                            <input type="text" id="admin-lb-r1" value="${lb.topRankers?.[0]?.name || ''}" placeholder="Student Name" class="w-full px-3 py-2 rounded-xl bg-[#050811] border border-amber-500/40 text-white text-xs focus:border-amber-400 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-300 mb-1">🥈 2nd Rank Runner-Up</label>
+                            <input type="text" id="admin-lb-r2" value="${lb.topRankers?.[1]?.name || ''}" placeholder="Student Name" class="w-full px-3 py-2 rounded-xl bg-[#050811] border border-slate-500/40 text-white text-xs focus:border-cyan-400 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-amber-600 mb-1">🥉 3rd Rank</label>
+                            <input type="text" id="admin-lb-r3" value="${lb.topRankers?.[2]?.name || ''}" placeholder="Student Name" class="w-full px-3 py-2 rounded-xl bg-[#050811] border border-amber-700/40 text-white text-xs focus:border-cyan-400 focus:outline-none" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Teacher's Note / Announcement</label>
+                        <textarea id="admin-lb-note" rows="2" class="w-full px-3.5 py-2 rounded-xl bg-[#050811] border border-blue-500/30 text-white text-xs focus:border-cyan-400 focus:outline-none">${lb.teacherNote || "Great performance by all participants! Practice daily to master Python logic and secure 45/45 theory + 30/30 practical marks."}</textarea>
+                    </div>
+
+                    <!-- Status Notification -->
+                    <div id="admin-publish-status" class="text-xs font-semibold min-h-[18px]"></div>
+
+                    <!-- Bottom Action Buttons -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-blue-500/20">
+                        <button type="button" onclick="window.handleLeaderboardReset()" class="text-xs text-red-400 hover:text-red-300 px-3.5 py-2 rounded-xl bg-red-500/10 border border-red-500/30 transition-colors">
+                            🗑 Reset / Clear Leaderboard
+                        </button>
+                        
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="window.closeModal()" class="btn-ghost text-xs py-2 px-4">
+                                Cancel
+                            </button>
+                            <button type="submit" id="publish-submit-btn" class="btn-electric text-xs py-2.5 px-6 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 border-amber-400/40 shadow-xl shadow-amber-500/25">
+                                <span>Publish Leaderboard PNG 🚀</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    setupDropzoneListeners();
+};
+
+function setupDropzoneListeners() {
+    const dropzone = document.getElementById('upload-dropzone');
+    if (!dropzone) return;
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('drag-active');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('drag-active');
+        }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            processLeaderboardFile(files[0]);
+        }
+    });
+}
+
+window.handleFileSelect = (event) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+        processLeaderboardFile(files[0]);
+    }
+};
+
+function processLeaderboardFile(file) {
+    if (!file.type.match('image.*')) {
+        alert("Please upload a valid image file (PNG, JPG, WebP)");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        tempUploadedImageData = e.target.result;
+        const previewWrap = document.getElementById('image-preview-wrapper');
+        const previewThumb = document.getElementById('upload-preview-thumb');
+        if (previewWrap && previewThumb) {
+            previewThumb.src = tempUploadedImageData;
+            previewWrap.classList.remove('hidden');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+window.removeSelectedImage = () => {
+    tempUploadedImageData = null;
+    const previewWrap = document.getElementById('image-preview-wrapper');
+    if (previewWrap) {
+        previewWrap.classList.add('hidden');
+    }
+    const fileInput = document.getElementById('leaderboard-file-input');
+    if (fileInput) fileInput.value = '';
+};
+
+window.saveAndPublishLeaderboard = async (e) => {
+    e.preventDefault();
+    const statusEl = document.getElementById('admin-publish-status');
+    const submitBtn = document.getElementById('publish-submit-btn');
+
+    if (!tempUploadedImageData) {
+        if (statusEl) {
+            statusEl.innerHTML = `<span class="text-amber-400">⚠️ Please select or drop a PNG leaderboard image first!</span>`;
+        }
+        return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>Saving & Publishing...</span>`;
+    }
+
+    const title = document.getElementById('admin-lb-title')?.value || "Daily Python Quiz — Championship Leaderboard";
+    const date = document.getElementById('admin-lb-date')?.value || "Today";
+    const r1 = document.getElementById('admin-lb-r1')?.value || "Champion";
+    const r2 = document.getElementById('admin-lb-r2')?.value || "Runner-Up";
+    const r3 = document.getElementById('admin-lb-r3')?.value || "Third";
+    const note = document.getElementById('admin-lb-note')?.value || "";
+
+    const updatedLeaderboard = {
+        id: `daily-quiz-${Date.now()}`,
+        title: title,
+        date: date,
+        quizNumber: "Daily Quiz Series",
+        topic: "CBSE Class 11 Python",
+        imageUrl: tempUploadedImageData,
+        teacherNote: note,
+        topRankers: [
+            { rank: 1, name: r1, badge: "🥇 Rank 1", score: "Top Score", time: "Fastest" },
+            { rank: 2, name: r2, badge: "🥈 Rank 2", score: "High Score", time: "" },
+            { rank: 3, name: r3, badge: "🥉 Rank 3", score: "High Score", time: "" }
+        ],
+        totalParticipants: "Class 11-B",
+        lastUpdated: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    };
+
+    // 1. Save to LocalStorage
+    saveStoredLeaderboard(updatedLeaderboard);
+    appState.leaderboard = updatedLeaderboard;
+
+    // 2. Attempt to save to local PowerShell Dev Server if running
+    try {
+        await fetch('/api/upload-leaderboard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                image: tempUploadedImageData,
+                metadata: updatedLeaderboard
+            })
+        });
+    } catch (err) {
+        console.log("Local server sync skipped (running in static mode)", err);
+    }
+
+    // 3. Rerender UI
+    renderLeaderboardShowcase();
+
+    if (statusEl) {
+        statusEl.innerHTML = `<span class="text-emerald-400">🎉 Leaderboard published successfully! Updating view...</span>`;
+    }
+
+    setTimeout(() => {
+        window.closeModal();
+        const lbSection = document.getElementById('leaderboard');
+        if (lbSection) {
+            lbSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 800);
+};
+
+window.handleLeaderboardReset = () => {
+    if (confirm("Are you sure you want to reset the leaderboard to default? This will remove the custom image.")) {
+        resetStoredLeaderboard();
+        appState.leaderboard = getStoredLeaderboard();
+        renderLeaderboardShowcase();
+        window.closeModal();
+    }
+};
+
+// Global Event Listeners & ESC Key to close modals + Secret Shortcuts
 function setupGlobalEventListeners() {
+    // Escape key and secret hotkeys
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             window.closeModal();
         }
+        // Secret shortcut: Ctrl + Shift + L or Ctrl + Alt + K
+        if ((e.ctrlKey && e.shiftKey && (e.key === 'L' || e.key === 'l')) ||
+            (e.ctrlKey && e.altKey && (e.key === 'K' || e.key === 'k'))) {
+            e.preventDefault();
+            window.openSecretAdminAuthModal();
+        }
     });
+
+    // Explicit Logo Event Listener for ultra-reliable clicks
+    const brandLogo = document.getElementById('brand-logo-secret');
+    if (brandLogo) {
+        brandLogo.addEventListener('click', (e) => {
+            window.handleLogoSecretClick(e);
+        });
+    }
 }
 
 // Scroll Spy for Navigation Active Glow
 function setupScrollSpy() {
     const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-link');
+    const navLinks = document.querySelectorAll('.cyber-nav-link, .mobile-nav-link');
 
-    window.addEventListener('scroll', () => {
-        let current = "";
+    const handleScroll = () => {
+        let current = "hero";
+        const scrollPosition = window.scrollY + 130;
+
         sections.forEach(section => {
-            const sectionTop = section.offsetTop - 120;
-            if (window.scrollY >= sectionTop) {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
                 current = section.getAttribute('id');
             }
         });
@@ -1400,10 +2053,15 @@ function setupScrollSpy() {
         navLinks.forEach(link => {
             const href = link.getAttribute('href');
             if (href === `#${current}`) {
-                link.classList.add('text-cyan-400', 'bg-blue-500/10', 'border-b-2', 'border-cyan-400');
+                link.classList.add('active-nav-pill');
             } else {
-                link.classList.remove('text-cyan-400', 'bg-blue-500/10', 'border-b-2', 'border-cyan-400');
+                link.classList.remove('active-nav-pill');
             }
         });
-    });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initial trigger
+    handleScroll();
 }
+
