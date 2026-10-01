@@ -1,63 +1,60 @@
 /**
- * KV REWARI - CLASS 11 PYTHON HUB
- * Centralized Configuration File
+ * CS 11 — COMPUTER SCIENCE LEARNING HUB
+ * PM SHRI Kendriya Vidyalaya, Rewari (CBSE 2026–27)
+ * Central Configuration File
  * 
- * IMPORTANT FOR NON-PROGRAMMERS:
- * To connect your Google Drive resources, simply paste your shareable Google Drive
- * folder or file link inside the quotes for each resource below.
- * 
- * Example:
- * lectures: "https://drive.google.com/drive/folders/YOUR_FOLDER_ID",
- * 
- * If a link is left empty (""), the website will automatically display a clean
- * "Resource Coming Soon" modal rather than a broken link.
+ * All 7 Google Drive Resource links are centrally managed here.
+ * You can easily update any link below without modifying UI code.
  */
 
+export const googleDriveResources = {
+    // 01. Revision & Important Topics
+    revision: "https://drive.google.com/drive/folders/1oe7AQFV4nwjeGI4hvKzvQgQLTszxYFSd?usp=sharing",
+
+    // 02. Mind Maps
+    mindMaps: "https://drive.google.com/drive/folders/113Mg-GfhnKs6YmFD2iYOAfttZr_1bkoO?usp=sharing",
+
+    // 03. Important Questions & Question Banks
+    questionBanks: "https://drive.google.com/drive/folders/1aIJBU5Yj-G-GcmRKYfk5d3EUVak7Z4wz?usp=sharing",
+
+    // 04. Formula, Syntax & Definitions
+    syntaxSheet: "https://drive.google.com/drive/folders/1Za5mPzf3rV6SkvZfJ3n_7OZzpFjyHlvw?usp=sharing",
+
+    // 05. Daily Quiz
+    dailyQuiz: "https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=sharing",
+
+    // 06. Comics
+    comics: "https://drive.google.com/drive/folders/1AT-FTi7FTUK6RpMHSPXDBjaUK1KC1XUW?usp=sharing",
+
+    // 07. Chapter Notes & PDFs
+    notes: "https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing"
+};
+
+// Aliased for legacy references
 export const resourceLinks = {
-    // Core Resource Hub Links
-    dailyQuiz: "https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=drive_link", // 🔥 Daily quiz Google Drive link
-    lectures: "",            // 🎥 Topic-wise recorded lectures
-    notes: "",               // 📚 Class notes, revision notes and PDFs
-    animatedNotes: "",       // ⚡ Animated visual short notes
-    mindMaps: "",            // 🧠 Chapter/topic-wise visual mind maps
-    quizzes: "",             // 📝 Topic and chapter-wise online quizzes
-    practice: "",            // 💻 Python practice programs & coding worksheets
-
-    // Exam Mode Quick Links
-    importantPrograms: "",   // 💻 Top 20 most important exam programs
-    importantQuestions: "",  // ❓ Chapter-wise high yield questions & answers
-    syntaxSheet: "",         // 📑 Complete Python syntax quick reference sheet
-    definitions: "",         // 📖 Important definitions & standard CBSE terminology
-    oneDayRevision: "",      // ⚡ Last-minute 1-Day before exam revision guide
-    chapterRevision: "",     // 📘 Complete chapter-wise revision notes
-
-    // Practical & Project Hub Links
-    practicalPrograms: "",   // 🧪 Complete practical lab journal & solved programs
-    projectResources: ""     // 🚀 Class 11 Python project templates and ideas
+    ...googleDriveResources,
+    lectures: "https://www.youtube.com/results?search_query=cbse+class+11+computer+science+python",
+    ncertTextbook: "https://ncert.nic.in/textbook.php?kecs1=1-8",
+    syllabusPdf: "https://cbseacademic.nic.in/web_material/CurriculumMain27/SecPart2/Computer_Science_SecP2_2026-27.pdf"
 };
 
 export const teacherInfo = {
     name: "Neelima Ma'am",
     designation: "PGT Computer Science",
-    school: "Kendriya Vidyalaya Rewari",
-    avatar: "", // Paste teacher image URL or leave empty for animated modern avatar
-    welcomeMessage: "Welcome to the Class 11 Python Hub! Programming is not about rote learning — it is about developing computational thinking, algorithmic logic, and confidence in problem-solving. Practice every program, understand the built-in functions, and make the most of these curated resources.",
+    school: "PM SHRI Kendriya Vidyalaya, Rewari",
+    welcomeMessage: "Welcome to CS 11! Computer Science (Code 083) is about computational thinking, algorithmic logic, and practical problem-solving. Make the most of these curated Google Drive resources, practice each practical program, and prepare with confidence.",
     subjects: [
         "Computer Science (Code 083)",
         "Python Programming & Problem Solving",
-        "Data Representation & Boolean Logic"
-    ],
-    highlights: [
-        { label: "Subject", value: "Computer Science" },
-        { label: "Class", value: "XI (Session 2026–27)" },
-        { label: "Focus", value: "Unit 2 — Python (45 Marks) + Practicals (30 Marks)" }
+        "Computer Systems & Boolean Logic"
     ]
 };
 
 export const schoolInfo = {
-    name: "Kendriya Vidyalaya Rewari",
+    name: "PM SHRI Kendriya Vidyalaya, Rewari",
     region: "Gurugram Region",
     board: "CBSE (Central Board of Secondary Education)",
     session: "2026–27",
-    subjectCode: "083 — Computer Science"
+    subjectCode: "083 — Computer Science",
+    class: "XI"
 };

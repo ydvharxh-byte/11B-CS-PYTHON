@@ -39,6 +39,37 @@ while ($listener.IsListening) {
 
         $path = $request.Url.LocalPath
 
+        # Handle Visitor Count Endpoint
+        if ($path -eq "/api/visitor-count") {
+            try {
+                $countFile = [System.IO.Path]::Combine($baseDir, "src", "data", "visitor_count.json")
+                $currentCount = 2845
+                if (Test-Path $countFile) {
+                    $jsonContent = Get-Content $countFile -Raw | ConvertFrom-Json
+                    $currentCount = [int]$jsonContent.count
+                }
+                if ($request.QueryString["hit"] -eq "1") {
+                    $currentCount += 1
+                    @{ count = $currentCount; updated = [DateTime]::UtcNow.ToString("o") } | ConvertTo-Json | Set-Content $countFile
+                }
+                $resObj = @{ count = $currentCount; status = "ok" }
+                $resBytes = [System.Text.Encoding]::UTF8.GetBytes((ConvertTo-Json $resObj))
+                $response.ContentType = "application/json; charset=utf-8"
+                $response.StatusCode = 200
+                $response.ContentLength64 = $resBytes.Length
+                $response.OutputStream.Write($resBytes, 0, $resBytes.Length)
+            } catch {
+                $errObj = @{ count = 2845; status = "fallback" }
+                $errBytes = [System.Text.Encoding]::UTF8.GetBytes((ConvertTo-Json $errObj))
+                $response.ContentType = "application/json; charset=utf-8"
+                $response.StatusCode = 200
+                $response.ContentLength64 = $errBytes.Length
+                $response.OutputStream.Write($errBytes, 0, $errBytes.Length)
+            }
+            $response.OutputStream.Close()
+            continue
+        }
+
         # Handle Secret Leaderboard Upload Endpoint
         if ($request.HttpMethod -eq "POST" -and $path -eq "/api/upload-leaderboard") {
             try {
