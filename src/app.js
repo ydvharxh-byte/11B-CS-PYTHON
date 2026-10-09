@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initStudyLibrary();
     initVisitorCounter();
+    renderAlertsList();
     setupGlobalSearch();
     setupKeyboardShortcuts();
     exposeGlobalFunctions();
@@ -1631,73 +1632,396 @@ function openSearchModal() {
 }
 
 // ==========================================================================
-// 11. Administrator Panel
+// 11. Alerts Management & Dynamic Store
+// ==========================================================================
+const defaultAlerts = [
+    {
+        id: 'alt-1',
+        tag: 'NEW',
+        tagType: 'tag-new',
+        text: 'Python Chapter 3 notes uploaded',
+        date: 'Oct 10, 2026',
+        link: 'https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing'
+    },
+    {
+        id: 'alt-2',
+        tag: 'REVISION',
+        tagType: 'tag-revision',
+        text: 'Mind map for Control Flow & Loops live',
+        date: 'Oct 9, 2026',
+        link: 'https://drive.google.com/drive/folders/113Mg-GfhnKs6YmFD2iYOAfttZr_1bkoO?usp=sharing'
+    },
+    {
+        id: 'alt-3',
+        tag: 'PRACTICE',
+        tagType: 'tag-practice',
+        text: 'Quiz 2.1 on Data Types is now open',
+        date: 'Oct 8, 2026',
+        link: 'https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=sharing'
+    }
+];
+
+function getStoredAlerts() {
+    try {
+        const stored = localStorage.getItem('cs11_alerts');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+    } catch (e) {}
+    localStorage.setItem('cs11_alerts', JSON.stringify(defaultAlerts));
+    return defaultAlerts;
+}
+
+function renderAlertsList() {
+    const listContainer = document.getElementById('alerts-list-container');
+    const badge = document.getElementById('alerts-count-badge');
+    if (!listContainer) return;
+
+    const alerts = getStoredAlerts();
+    if (badge) {
+        badge.textContent = `${alerts.length} Active`;
+    }
+
+    listContainer.innerHTML = alerts.map(a => {
+        const tagClass = a.tagType || (
+            a.tag === 'NEW' ? 'tag-new' :
+            a.tag === 'REVISION' ? 'tag-revision' :
+            a.tag === 'PRACTICE' ? 'tag-practice' :
+            a.tag === 'EXAM' ? 'tag-exam' : 'tag-notice'
+        );
+        const clickAction = a.link ? `onclick="window.open('${a.link}', '_blank')"` : `onclick="alert('${escapeForAttribute(a.text)}')`;
+        return `
+            <div class="alert-item-row" ${clickAction}>
+                <div class="alert-label-wrap">
+                    <span class="alert-tag-badge ${tagClass}">${escapeHtml(a.tag || 'NOTICE')}</span>
+                    <span class="alert-label">${escapeHtml(a.text)}</span>
+                </div>
+                <span class="alert-date-text">(${escapeHtml(a.date)})</span>
+            </div>
+        `;
+    }).join('');
+}
+
+// ==========================================================================
+// 12. Administrator & Faculty Portal (Password: Kv@2026)
 // ==========================================================================
 function openAdminModal() {
     const modalHtml = `
         <div class="modal-container max-w-md">
-            <div class="modal-header bg-slate-50 dark:bg-slate-800">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Admin Security Access</h3>
-                <button onclick="window.closeModal()" class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">✕</button>
+            <div class="modal-header bg-[#0D2419] text-white">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-xs">🛡️</span>
+                    <h3 class="text-sm font-bold text-white">Faculty &amp; Admin Access</h3>
+                </div>
+                <button onclick="window.closeModal()" class="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white">✕</button>
             </div>
             <div class="modal-body p-6 space-y-4">
-                <p class="text-xs text-slate-500">
-                    Administrator portal is strictly reserved for authorized KV Rewari faculty to update shared resource links.
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Reserved for KV Rewari CS faculty to manage site alerts, answer student questions, and update Drive folder links.
                 </p>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Enter Master Admin PIN</label>
-                    <input type="password" id="admin-pin-field" placeholder="••••" class="w-full p-2.5 border rounded-lg text-sm bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Enter Admin Password</label>
+                    <input type="password" id="admin-pin-field" placeholder="Enter password (Kv@2026)" onkeydown="if(event.key==='Enter') window.verifyAdminPin()" class="w-full p-2.5 border rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <p class="text-[11px] text-slate-400 mt-1">Default faculty password: <code class="font-mono text-emerald-700 dark:text-emerald-400">Kv@2026</code></p>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button onclick="window.verifyAdminPin()" class="btn-primary text-xs py-2 px-5 w-full">
-                    Authenticate
+            <div class="modal-footer p-4 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="window.verifyAdminPin()" class="btn-primary text-xs py-2.5 px-5 w-full font-bold">
+                    Authenticate &amp; Enter Dashboard
                 </button>
             </div>
         </div>
     `;
     openModal(modalHtml, 'admin-auth-modal');
+    setTimeout(() => {
+        const inp = document.getElementById('admin-pin-field');
+        if (inp) inp.focus();
+    }, 100);
 }
 
 function verifyAdminPin() {
     const pinField = document.getElementById('admin-pin-field');
     if (!pinField) return;
 
-    if (pinField.value === '1108' || pinField.value === 'admin') {
-        renderAdminControlPanel();
+    const val = pinField.value.trim();
+    if (val === 'Kv@2026' || val === 'kv@2026' || val === '1108' || val === 'admin') {
+        renderAdminControlPanel('alerts');
     } else {
-        alert('Invalid Security PIN. Access Denied.');
+        alert('Invalid Security Password. Access Denied. (Hint: Kv@2026)');
     }
 }
 
-function renderAdminControlPanel() {
-    const modalHtml = `
-        <div class="modal-container max-w-2xl h-[85vh]">
-            <div class="modal-header bg-slate-900 text-white border-slate-800">
-                <h3 class="text-sm font-bold">Portal Administration Dashboard</h3>
-                <button onclick="window.closeModal()" class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs">✕</button>
-            </div>
-            <div class="modal-body p-6 space-y-4 overflow-y-auto text-xs text-slate-700 dark:text-slate-300">
-                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg text-emerald-800 dark:text-emerald-300 font-semibold">
-                    ✓ Authenticated as KV Rewari Administrator
-                </div>
+function renderAdminControlPanel(activeTab = 'alerts') {
+    const alerts = getStoredAlerts();
+    const doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
+    const pendingDoubtsCount = doubts.filter(d => !d.answer).length;
 
-                <div class="space-y-3">
-                    <h4 class="font-bold text-slate-900 dark:text-white uppercase tracking-wider">Configure Google Drive Resource Links</h4>
-                    ${studyLibraryResources.map(res => `
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 capitalize">${res.order}. ${res.title}</label>
-                            <input type="text" id="admin-drive-${res.id}" value="${res.driveUrl || ''}" placeholder="https://drive.google.com/..." class="w-full p-2 border rounded text-xs bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700">
-                        </div>
-                    `).join('')}
+    const modalHtml = `
+        <div class="modal-container max-w-4xl h-[88vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="modal-header bg-[#0D2419] text-white border-b border-[#1A4530] flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center font-bold text-sm">🛡️</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span>Faculty &amp; Portal Administration</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">Authenticated</span>
+                        </h3>
+                        <p class="text-xs text-slate-300">Manage announcements, answer student doubts &amp; update resources</p>
+                    </div>
                 </div>
+                <button onclick="window.closeModal()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white">✕</button>
             </div>
-            <div class="modal-footer">
-                <button onclick="window.saveAdminSettings()" class="btn-primary text-xs py-2 px-5">Save Configuration</button>
+
+            <!-- Tab Navigation Bar -->
+            <div class="flex border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 px-6 pt-3 gap-2">
+                <button onclick="window.switchAdminTab('alerts')" class="px-4 py-2 text-xs font-bold rounded-t-xl transition-all ${activeTab === 'alerts' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-t-2 border-emerald-600 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}">
+                    🚨 Alerts &amp; Announcements (${alerts.length})
+                </button>
+                <button onclick="window.switchAdminTab('doubts')" class="px-4 py-2 text-xs font-bold rounded-t-xl transition-all relative ${activeTab === 'doubts' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-t-2 border-emerald-600 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}">
+                    💬 Student Doubts &amp; Q&amp;A (${doubts.length})
+                    ${pendingDoubtsCount > 0 ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-white font-bold">${pendingDoubtsCount} pending</span>` : ''}
+                </button>
+                <button onclick="window.switchAdminTab('links')" class="px-4 py-2 text-xs font-bold rounded-t-xl transition-all ${activeTab === 'links' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-t-2 border-emerald-600 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}">
+                    📁 Google Drive Resource Links
+                </button>
+            </div>
+
+            <!-- Modal Body by Tab -->
+            <div class="modal-body p-6 flex-1 overflow-y-auto space-y-4 bg-[#F8FAF9] dark:bg-slate-950">
+                ${activeTab === 'alerts' ? renderAdminAlertsTab(alerts) : ''}
+                ${activeTab === 'doubts' ? renderAdminDoubtsTab(doubts) : ''}
+                ${activeTab === 'links' ? renderAdminLinksTab() : ''}
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
+                <span class="text-xs text-slate-500">Master Password: <code class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[11px]">Kv@2026</code></span>
+                <button onclick="window.closeModal()" class="text-xs font-bold px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300">
+                    Close Dashboard
+                </button>
             </div>
         </div>
     `;
     openModal(modalHtml, 'admin-dashboard-modal');
+}
+
+function switchAdminTab(tab) {
+    renderAdminControlPanel(tab);
+}
+
+function renderAdminAlertsTab(alerts) {
+    return `
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h4 class="font-bold text-sm text-slate-900 dark:text-white">Active Homepage Alerts</h4>
+                    <p class="text-xs text-slate-500">Edit, add or remove notices displayed in the Alerts box.</p>
+                </div>
+                <button onclick="window.addNewAlertItem()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 flex items-center gap-1.5 transition-colors">
+                    <span>+ Add New Alert</span>
+                </button>
+            </div>
+
+            <div class="space-y-3" id="admin-alerts-list">
+                ${alerts.map((alt) => `
+                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                            <div class="sm:col-span-2">
+                                <label class="block text-[10px] font-semibold text-slate-500 uppercase">Tag</label>
+                                <select id="alert-tag-${alt.id}" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
+                                    <option value="NEW" ${alt.tag === 'NEW' ? 'selected' : ''}>NEW</option>
+                                    <option value="REVISION" ${alt.tag === 'REVISION' ? 'selected' : ''}>REVISION</option>
+                                    <option value="PRACTICE" ${alt.tag === 'PRACTICE' ? 'selected' : ''}>PRACTICE</option>
+                                    <option value="EXAM" ${alt.tag === 'EXAM' ? 'selected' : ''}>EXAM</option>
+                                    <option value="NOTICE" ${alt.tag === 'NOTICE' ? 'selected' : ''}>NOTICE</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-6">
+                                <label class="block text-[10px] font-semibold text-slate-500 uppercase">Alert Text / Announcement</label>
+                                <input type="text" id="alert-text-${alt.id}" value="${escapeHtml(alt.text)}" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium" placeholder="Alert text...">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="block text-[10px] font-semibold text-slate-500 uppercase">Date</label>
+                                <input type="text" id="alert-date-${alt.id}" value="${escapeHtml(alt.date)}" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" placeholder="Oct 10, 2026">
+                            </div>
+                            <div class="sm:col-span-1 flex justify-end items-end pt-3 sm:pt-0">
+                                <button onclick="window.deleteAlertItem('${alt.id}')" class="text-xs p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40" title="Delete Alert">🗑️</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase">Destination Link (Optional Drive / Page URL)</label>
+                            <input type="text" id="alert-link-${alt.id}" value="${escapeHtml(alt.link || '')}" class="w-full text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[11px]" placeholder="https://drive.google.com/...">
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="window.saveAllAlerts()" class="text-xs font-bold px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm flex items-center gap-1.5 transition-colors">
+                    <span>💾 Save &amp; Update Alerts on Website</span>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function addNewAlertItem() {
+    const alerts = getStoredAlerts();
+    alerts.unshift({
+        id: 'alt_' + Date.now(),
+        tag: 'NEW',
+        tagType: 'tag-new',
+        text: 'New CBSE Study Resource Available',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        link: ''
+    });
+    localStorage.setItem('cs11_alerts', JSON.stringify(alerts));
+    renderAdminControlPanel('alerts');
+    renderAlertsList();
+}
+
+function deleteAlertItem(id) {
+    if (!confirm('Are you sure you want to delete this alert?')) return;
+    let alerts = getStoredAlerts();
+    alerts = alerts.filter(a => a.id !== id);
+    localStorage.setItem('cs11_alerts', JSON.stringify(alerts));
+    renderAdminControlPanel('alerts');
+    renderAlertsList();
+}
+
+function saveAllAlerts() {
+    const alerts = getStoredAlerts();
+    alerts.forEach(alt => {
+        const tagEl = document.getElementById(`alert-tag-${alt.id}`);
+        const textEl = document.getElementById(`alert-text-${alt.id}`);
+        const dateEl = document.getElementById(`alert-date-${alt.id}`);
+        const linkEl = document.getElementById(`alert-link-${alt.id}`);
+        if (tagEl) alt.tag = tagEl.value;
+        if (textEl && textEl.value.trim()) alt.text = textEl.value.trim();
+        if (dateEl && dateEl.value.trim()) alt.date = dateEl.value.trim();
+        if (linkEl) alt.link = linkEl.value.trim();
+
+        alt.tagType = (
+            alt.tag === 'NEW' ? 'tag-new' :
+            alt.tag === 'REVISION' ? 'tag-revision' :
+            alt.tag === 'PRACTICE' ? 'tag-practice' :
+            alt.tag === 'EXAM' ? 'tag-exam' : 'tag-notice'
+        );
+    });
+    localStorage.setItem('cs11_alerts', JSON.stringify(alerts));
+    alert('Alerts updated and published to the website!');
+    renderAlertsList();
+    renderAdminControlPanel('alerts');
+}
+
+function renderAdminDoubtsTab(doubts) {
+    if (doubts.length === 0) {
+        return `
+            <div class="p-8 text-center text-slate-500 space-y-2">
+                <span class="text-3xl">💬</span>
+                <p class="font-bold text-sm">No Student Doubts Submitted Yet</p>
+                <p class="text-xs">When students submit questions from the Doubt Forum, they will appear here for you to answer.</p>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="space-y-4">
+            <div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Student Questions &amp; Faculty Answers</h4>
+                <p class="text-xs text-slate-500">Provide official teacher explanations. Answered questions update live in the Doubt Forum for students.</p>
+            </div>
+
+            <div class="space-y-4">
+                ${doubts.map(d => `
+                    <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border ${d.answer ? 'border-slate-200 dark:border-slate-800' : 'border-amber-300 dark:border-amber-700/60 shadow-xs'} space-y-3">
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-900 dark:text-white">${escapeHtml(d.author)}</span>
+                                <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${escapeHtml(d.topic)}</span>
+                                ${d.answer ? `
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">✓ Answered</span>
+                                ` : `
+                                    <span class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-[10px] text-amber-700 dark:text-amber-300 font-bold animate-pulse">⏳ Pending Answer</span>
+                                `}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-400 text-[11px]">${escapeHtml(d.time || 'Recently')}</span>
+                                <button onclick="window.deleteStudentDoubt('${d.id}')" class="text-rose-600 hover:text-rose-700 text-xs px-2 py-1 rounded" title="Delete question">🗑️</button>
+                            </div>
+                        </div>
+
+                        <!-- Question Text -->
+                        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100">
+                            <span class="font-bold text-slate-500 uppercase text-[10px] block mb-1">Student Question:</span>
+                            ${escapeHtml(d.question)}
+                        </div>
+
+                        <!-- Teacher Answer Input -->
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1">
+                                <span>✏️</span>
+                                <span>Teacher / Faculty Solution:</span>
+                            </label>
+                            <textarea id="admin-answer-${d.id}" rows="3" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Type verified solution / explanation for this student...">${escapeHtml(d.answer || '')}</textarea>
+                            <div class="flex justify-end">
+                                <button onclick="window.saveTeacherDoubtAnswer('${d.id}')" class="text-xs font-bold px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition-colors flex items-center gap-1">
+                                    <span>✓ Post / Update Solution</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function saveTeacherDoubtAnswer(doubtId) {
+    const textarea = document.getElementById(`admin-answer-${doubtId}`);
+    if (!textarea || !textarea.value.trim()) {
+        alert('Please write a solution before saving.');
+        return;
+    }
+    const doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
+    const d = doubts.find(item => item.id === doubtId);
+    if (d) {
+        d.answer = textarea.value.trim();
+        d.status = 'answered';
+        localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+        alert('Teacher solution posted! Students will now see it in the Doubt Forum.');
+        renderAdminControlPanel('doubts');
+    }
+}
+
+function deleteStudentDoubt(doubtId) {
+    if (!confirm('Delete this doubt question?')) return;
+    let doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
+    doubts = doubts.filter(item => item.id !== doubtId);
+    localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+    renderAdminControlPanel('doubts');
+}
+
+function renderAdminLinksTab() {
+    return `
+        <div class="space-y-3">
+            <div>
+                <h4 class="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-xs">Configure Google Drive Resource Links</h4>
+                <p class="text-xs text-slate-500">Update Google Drive folder links for the core learning modules.</p>
+            </div>
+            ${studyLibraryResources.map(res => `
+                <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 capitalize">${res.order}. ${res.title}</label>
+                    <input type="text" id="admin-drive-${res.id}" value="${res.driveUrl || ''}" placeholder="https://drive.google.com/..." class="w-full p-2 border rounded-lg text-xs bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono">
+                </div>
+            `).join('')}
+            <div class="pt-2 flex justify-end">
+                <button onclick="window.saveAdminSettings()" class="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800">Save Drive URLs</button>
+            </div>
+        </div>
+    `;
 }
 
 function saveAdminSettings() {
@@ -1978,12 +2302,18 @@ function openDoubtForumModal() {
                             </div>
                             <p class="text-xs font-semibold text-slate-800 dark:text-slate-100">${d.question}</p>
                             ${d.answer ? `
-                                <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 mt-2">
-                                    <div class="font-bold text-[11px] text-emerald-800 dark:text-emerald-300 mb-1">✓ Teacher / Peer Solution:</div>
-                                    ${d.answer}
+                                <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-100 mt-2 space-y-1">
+                                    <div class="font-bold text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+                                        <span>✓</span>
+                                        <span>Teacher / Faculty Solution:</span>
+                                    </div>
+                                    <div class="leading-relaxed whitespace-pre-line">${escapeHtml(d.answer)}</div>
                                 </div>
                             ` : `
-                                <div class="text-[11px] text-amber-600 dark:text-amber-400 italic">Awaiting teacher solution...</div>
+                                <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11.5px] text-amber-800 dark:text-amber-300 flex items-center gap-2 mt-2">
+                                    <span>⏳</span>
+                                    <span>Awaiting teacher review &amp; solution in Admin Portal...</span>
+                                </div>
                             `}
                         </div>
                     `).join('')}
@@ -2005,13 +2335,15 @@ function submitStudentDoubt() {
     const doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
     doubts.unshift({
         id: 'd_' + Date.now(),
-        author: nameInput.value.trim() || 'Anonymous Student',
-        topic: topicSelect.value || 'Python',
+        author: (nameInput && nameInput.value.trim()) || 'Class 11 Student',
+        topic: (topicSelect && topicSelect.value) || 'Python Basics',
         time: 'Just now',
         question: textInput.value.trim(),
-        answer: 'Thank you for asking! Your teacher or peer mentor will review and answer this shortly.'
+        answer: null,
+        status: 'pending'
     });
     localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+    alert('Your doubt has been posted! The teacher will answer it in the Admin Portal.');
     openDoubtForumModal();
 }
 
@@ -2448,6 +2780,15 @@ function exposeGlobalFunctions() {
     window.verifyAdminPin = verifyAdminPin;
     window.saveAdminSettings = saveAdminSettings;
     window.copyToClipboard = copyToClipboard;
+
+    // Admin & Alerts Handlers
+    window.renderAlertsList = renderAlertsList;
+    window.switchAdminTab = switchAdminTab;
+    window.addNewAlertItem = addNewAlertItem;
+    window.deleteAlertItem = deleteAlertItem;
+    window.saveAllAlerts = saveAllAlerts;
+    window.saveTeacherDoubtAnswer = saveTeacherDoubtAnswer;
+    window.deleteStudentDoubt = deleteStudentDoubt;
 
     // New Botanical Dashboard handlers
     window.openMindMapsModal = openMindMapsModal;

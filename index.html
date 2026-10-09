@@ -154,6 +154,15 @@
                     <span>Download IDLE</span>
                 </a>
 
+                <!-- Faculty & Admin Portal Button -->
+                <button class="admin-portal-pill" onclick="window.openAdminModal()" title="Faculty &amp; Admin Portal (Password: Kv@2026)">
+                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Admin</span>
+                </button>
+
                 <!-- Theme Toggle Button (Instant 1-Click Working) -->
                 <button class="theme-toggle-btn" id="theme-toggle-button" onclick="window.toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
                     <svg id="theme-sun-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -200,7 +209,7 @@
                         </div>
                     </a>
 
-                    <!-- Vertical Navigation List -->
+                    <!-- Vertical Navigation List (Wired to Core Section Resources) -->
                     <nav class="sidebar-nav-list">
                         <button class="sidebar-nav-btn active" onclick="window.scrollTo({top:0, behavior:'smooth'})">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -209,7 +218,7 @@
                             <span>Home</span>
                         </button>
 
-                        <button class="sidebar-nav-btn" onclick="window.openChapterReader()">
+                        <button class="sidebar-nav-btn" onclick="window.open('https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing', '_blank')" title="Chapter Notes &amp; PDFs">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -217,7 +226,7 @@
                             <span>NCERT Notes</span>
                         </button>
 
-                        <button class="sidebar-nav-btn" onclick="window.openPythonLab()">
+                        <button class="sidebar-nav-btn" onclick="window.open('https://www.onlinegdb.com/online_python_compiler', '_blank')" title="OnlineGDB Python Compiler">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                                 <polyline points="16 18 22 12 16 6"></polyline>
                                 <polyline points="8 6 2 12 8 18"></polyline>
@@ -225,7 +234,7 @@
                             <span>Python Lab</span>
                         </button>
 
-                        <button class="sidebar-nav-btn" onclick="window.openMindMapsModal()">
+                        <button class="sidebar-nav-btn" onclick="window.open('https://drive.google.com/drive/folders/113Mg-GfhnKs6YmFD2iYOAfttZr_1bkoO?usp=sharing', '_blank')" title="Mind Maps">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -233,7 +242,7 @@
                             <span>Mind Maps</span>
                         </button>
 
-                        <button class="sidebar-nav-btn" onclick="window.openPracticeCentre()">
+                        <button class="sidebar-nav-btn" onclick="window.open('https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=sharing', '_blank')" title="Daily Quizzes">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M9 11l3 3L22 4"></path>
                                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
@@ -241,7 +250,7 @@
                             <span>Quizzes</span>
                         </button>
 
-                        <button class="sidebar-nav-btn" onclick="window.openStudyLibraryModal()">
+                        <button class="sidebar-nav-btn" onclick="window.open('https://drive.google.com/drive/folders/1oe7AQFV4nwjeGI4hvKzvQgQLTszxYFSd?usp=sharing', '_blank')" title="Google Drive Revision &amp; Study Library">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                             </svg>
@@ -457,7 +466,8 @@
                 </section>
 
                 <!-- 4. ALERTS SECTION (FORMERLY RECENT UPDATES) -->
-                <section class="alerts-box-container">
+                <!-- 4. ALERTS SECTION (FORMERLY RECENT UPDATES) -->
+                <section class="alerts-box-container" id="alerts-section">
                     <div class="alerts-header">
                         <div class="alerts-title-wrap">
                             <svg class="alert-icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -465,39 +475,39 @@
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                             </svg>
                             <span>Alerts</span>
-                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300">
+                            <span id="alerts-count-badge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300">
                                 3 Active
                             </span>
                         </div>
-                        <a href="javascript:void(0)" onclick="window.openChapterReader()" class="view-all-link">
-                            <span>View All</span>
+                        <a href="javascript:void(0)" onclick="window.openAdminModal()" class="view-all-link" title="Manage alerts in Admin Portal (Password: Kv@2026)">
+                            <span>Manage / Admin</span>
                             <span>&rarr;</span>
                         </a>
                     </div>
 
-                    <div class="alerts-list">
-                        <div class="alert-item-row" onclick="window.openChapterReader('cs-03')">
+                    <div class="alerts-list" id="alerts-list-container">
+                        <div class="alert-item-row" onclick="window.open('https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing', '_blank')">
                             <div class="alert-label-wrap">
                                 <span class="alert-tag-badge tag-new">NEW</span>
                                 <span class="alert-label">Python Chapter 3 notes uploaded</span>
                             </div>
-                            <span class="alert-date-text">(Oct 10, 2025)</span>
+                            <span class="alert-date-text">(Oct 10, 2026)</span>
                         </div>
 
-                        <div class="alert-item-row" onclick="window.openMindMapsModal('control-flow')">
+                        <div class="alert-item-row" onclick="window.open('https://drive.google.com/drive/folders/113Mg-GfhnKs6YmFD2iYOAfttZr_1bkoO?usp=sharing', '_blank')">
                             <div class="alert-label-wrap">
                                 <span class="alert-tag-badge tag-revision">REVISION</span>
                                 <span class="alert-label">Mind map for Control Flow &amp; Loops live</span>
                             </div>
-                            <span class="alert-date-text">(Oct 9, 2025)</span>
+                            <span class="alert-date-text">(Oct 9, 2026)</span>
                         </div>
 
-                        <div class="alert-item-row" onclick="window.openPracticeCentre()">
+                        <div class="alert-item-row" onclick="window.open('https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=sharing', '_blank')">
                             <div class="alert-label-wrap">
                                 <span class="alert-tag-badge tag-practice">PRACTICE</span>
                                 <span class="alert-label">Quiz 2.1 on Data Types is now open</span>
                             </div>
-                            <span class="alert-date-text">(Oct 8, 2025)</span>
+                            <span class="alert-date-text">(Oct 8, 2026)</span>
                         </div>
                     </div>
                 </section>
@@ -542,14 +552,14 @@
                             <span>NCERT (Drive)</span>
                             <span class="arrow-icon">&rarr;</span>
                         </a>
-                        <button class="quicklink-btn" onclick="window.openQuickAccessModal('syntax')">
+                        <a href="https://drive.google.com/drive/folders/1Za5mPzf3rV6SkvZfJ3n_7OZzpFjyHlvw?usp=sharing" target="_blank" rel="noopener" class="quicklink-btn">
                             <span>Python Syntax</span>
                             <span class="arrow-icon">&rarr;</span>
-                        </button>
-                        <button class="quicklink-btn" onclick="window.openChapterReader('cs-02')">
+                        </a>
+                        <a href="https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing" target="_blank" rel="noopener" class="quicklink-btn">
                             <span>Class Notes</span>
                             <span class="arrow-icon">&rarr;</span>
-                        </button>
+                        </a>
                         <button class="quicklink-btn" onclick="window.openDoubtForumModal()">
                             <span>Doubt Forum</span>
                             <span class="arrow-icon">&rarr;</span>

@@ -380,6 +380,40 @@ body {
   }
 }
 
+.admin-portal-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-portal-pill:hover {
+  background: rgba(217, 119, 6, 0.3);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 640px) {
+  .admin-portal-pill span {
+    display: none;
+  }
+  .admin-portal-pill {
+    padding: 7px;
+    border-radius: 50%;
+  }
+}
+
 .user-avatar-circle {
   width: 32px;
   height: 32px;
@@ -1182,10 +1216,14 @@ html.dark .alert-item-row:hover .alert-label {
 .tag-new { background: #DCFCE7; color: #166534; }
 .tag-revision { background: #E0E7FF; color: #3730A3; }
 .tag-practice { background: #FEF3C7; color: #92400E; }
+.tag-exam { background: #FFE4E6; color: #9F1239; }
+.tag-notice { background: #F3E8FF; color: #6B21A8; }
 
 html.dark .tag-new { background: rgba(22, 101, 52, 0.4); color: #86EFAC; }
 html.dark .tag-revision { background: rgba(55, 48, 163, 0.4); color: #C7D2FE; }
 html.dark .tag-practice { background: rgba(146, 64, 14, 0.4); color: #FDE68A; }
+html.dark .tag-exam { background: rgba(159, 18, 57, 0.4); color: #FDA4AF; }
+html.dark .tag-notice { background: rgba(107, 33, 168, 0.4); color: #D8B4FE; }
 
 .alert-label {
   color: var(--text-main);
