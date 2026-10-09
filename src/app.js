@@ -236,15 +236,20 @@ function resetLibraryFilters() {
 // ==========================================================================
 // 2. Persistent Central Website Visitor Counter
 // ==========================================================================
+const BASE_VIEWS = 250;
+
 async function initVisitorCounter() {
     const counterEl = document.getElementById('visitor-count');
     if (!counterEl) return;
 
     const sessionCounted = sessionStorage.getItem('cs11_session_hit');
-    const cachedCount = localStorage.getItem('cs11_last_known_count');
+    let cachedCount = parseInt(localStorage.getItem('cs11_last_known_count') || '0', 10);
+    if (isNaN(cachedCount) || cachedCount < BASE_VIEWS) {
+        cachedCount = BASE_VIEWS;
+    }
 
     // If already counted in this session, show cached count without incrementing
-    if (sessionCounted && cachedCount) {
+    if (sessionCounted && cachedCount >= BASE_VIEWS) {
         counterEl.textContent = formatVisitorCount(cachedCount);
         return;
     }
@@ -258,8 +263,12 @@ async function initVisitorCounter() {
         clearTimeout(timeoutId);
         if (res.ok) {
             const data = await res.json();
-            if (data && data.count) {
-                const countStr = String(data.count);
+            if (data && data.count !== undefined) {
+                let countVal = parseInt(data.count, 10);
+                if (isNaN(countVal) || countVal < BASE_VIEWS) {
+                    countVal = BASE_VIEWS;
+                }
+                const countStr = String(countVal);
                 sessionStorage.setItem('cs11_session_hit', countStr);
                 localStorage.setItem('cs11_last_known_count', countStr);
                 counterEl.textContent = formatVisitorCount(countStr);
@@ -285,7 +294,9 @@ async function initVisitorCounter() {
             const svgText = await response.text();
             const match = svgText.match(/hits:\s*([\d,]+)/i) || svgText.match(/<title>hits:\s*([\d,]+)<\/title>/i);
             if (match && match[1]) {
-                const countStr = match[1].replace(/,/g, '');
+                const rawHits = parseInt(match[1].replace(/,/g, ''), 10) || 0;
+                const totalCount = BASE_VIEWS + rawHits;
+                const countStr = String(totalCount);
                 sessionStorage.setItem('cs11_session_hit', countStr);
                 localStorage.setItem('cs11_last_known_count', countStr);
                 counterEl.textContent = formatVisitorCount(countStr);
@@ -296,17 +307,19 @@ async function initVisitorCounter() {
         console.warn('Central visitor counter sync notice:', err);
     }
 
-    // Fallback: If network failed or offline, show last known count or clean status
-    if (cachedCount) {
-        counterEl.textContent = formatVisitorCount(cachedCount);
-    } else {
-        counterEl.textContent = 'Active';
+    // Fallback: If offline or API unavailable, increment local count from 250
+    let fallbackCount = cachedCount;
+    if (!sessionCounted) {
+        fallbackCount += 1;
+        sessionStorage.setItem('cs11_session_hit', String(fallbackCount));
+        localStorage.setItem('cs11_last_known_count', String(fallbackCount));
     }
+    counterEl.textContent = formatVisitorCount(fallbackCount);
 }
 
 function formatVisitorCount(val) {
     const num = parseInt(val, 10);
-    if (isNaN(num)) return 'Active';
+    if (isNaN(num)) return '250';
     return Number(num).toLocaleString('en-IN');
 }
 
@@ -596,6 +609,14 @@ for i in range(1, 6):
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <a href="https://www.onlinegdb.com/online_python_compiler" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-medium transition-colors" title="Launch OnlineGDB Python Compiler in new tab">
+                        <span>OnlineGDB</span>
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                    <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium transition-colors" title="Download Python IDLE from python.org">
+                        <span>Download IDLE</span>
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </a>
                     <select id="lab-program-loader" class="text-xs bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none">
                         <option value="">Load CBSE Practical Program...</option>
                         ${practicalPrograms.map(p => `
@@ -1738,6 +1759,654 @@ function setupKeyboardShortcuts() {
     });
 }
 
+// ==========================================================================
+// 12. Botanical Dashboard Interactive Modules (Mind Maps, Forum, Tracker, Lofi)
+// ==========================================================================
+
+// Mind Maps Module
+function openMindMapsModal(activeTab = 'python-basics') {
+    const mindMapData = [
+        {
+            id: 'python-basics',
+            title: 'Python Fundamentals',
+            unit: 'Unit 2 (45M)',
+            nodes: [
+                { title: 'Variables & Identifiers', desc: 'Rules: Must begin with letter or _, case-sensitive, no keywords, alphanumeric.' },
+                { title: 'Basic Data Types', desc: 'Immutable: Numbers (int, float, complex), Strings, Tuples. Mutable: Lists, Dictionaries, Sets.' },
+                { title: 'Operators Hierarchy', desc: 'Arithmetic (**, *, /, //, %, +, -) -> Relational (==, !=, <, >) -> Logical (not, and, or).' },
+                { title: 'Type Casting', desc: 'Explicit: int("25"), float(10), str(42). Implicit: Python automatically widens int to float.' }
+            ]
+        },
+        {
+            id: 'control-flow',
+            title: 'Control Flow & Loops',
+            unit: 'Unit 2 (45M)',
+            nodes: [
+                { title: 'Conditional Statements', desc: 'if, if-elif, if-elif-else blocks with strict 4-space indentation.' },
+                { title: 'For Loop & range()', desc: 'range(start, stop, step) generates sequences up to stop-1. Supports negative steps.' },
+                { title: 'While Loop (Indefinite)', desc: 'Executes while boolean expression evaluates to True. Guard against infinite loops.' },
+                { title: 'Loop Control Statements', desc: 'break: exits loop immediately. continue: skips current iteration to next cycle.' }
+            ]
+        },
+        {
+            id: 'data-structures',
+            title: 'Strings, Lists & Dicts',
+            unit: 'Unit 2 (45M)',
+            nodes: [
+                { title: 'Strings (Immutable)', desc: 'Indexing [i], Slicing [start:end:step], upper(), lower(), isdigit(), split(), join().' },
+                { title: 'Lists (Mutable)', desc: 'Dynamic arrays: append(x), extend(L), insert(i, x), pop(), sort(), reverse().' },
+                { title: 'Tuples (Immutable)', desc: 'Protected ordered records: packing, unpacking, len(), min(), max(), count(), index().' },
+                { title: 'Dictionaries (Key-Value)', desc: 'Unique immutable keys: d[key], d.get(key), keys(), values(), items(), update().' }
+            ]
+        },
+        {
+            id: 'computer-systems',
+            title: 'Computer Systems & Logic',
+            unit: 'Unit 1 (10M)',
+            nodes: [
+                { title: 'Hardware Architecture', desc: 'Von Neumann: Input -> CPU (ALU + CU + Registers) -> Primary/Secondary Memory -> Output.' },
+                { title: 'Memory Hierarchy', desc: 'Registers (fastest) -> Cache -> RAM/ROM -> SSD/HDD (Secondary Storage).' },
+                { title: 'Number Systems', desc: 'Binary (Base 2), Octal (Base 8), Decimal (Base 10), Hexadecimal (Base 16). Conversions.' },
+                { title: 'Boolean Logic & Gates', desc: 'Truth tables: AND (.), OR (+), NOT (¬), NAND, NOR, XOR. De Morgan\'s Theorems.' }
+            ]
+        },
+        {
+            id: 'society-ethics',
+            title: 'Society, Law & Ethics',
+            unit: 'Unit 3 (15M)',
+            nodes: [
+                { title: 'Digital Footprint', desc: 'Active (posts, emails) vs Passive (cookies, IP logs, search history) trails.' },
+                { title: 'Cyber Safety & Security', desc: 'Phishing, Ransomware, Identity Theft, Trojan Horses, Two-factor authentication.' },
+                { title: 'Cyber Law (IT Act 2000)', desc: 'Indian Information Technology Act 2000, Section 66 (Hacking/Data Theft).' },
+                { title: 'IPR & Open Source', desc: 'Copyright, Patents, Trademarks, GPL, Creative Commons, FOSS philosophy.' }
+            ]
+        }
+    ];
+
+    const currentMap = mindMapData.find(m => m.id === activeTab) || mindMapData[0];
+
+    const modalHtml = `
+        <div class="modal-container max-w-4xl h-[88vh]">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-sm font-bold">🧠</span>
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <span>Visual Mind Maps</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-200">CBSE Class 11 CS</span>
+                        </h3>
+                        <p class="text-xs text-emerald-200/80">Structured concept breakdown for fast revision and mental recall</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="${googleDriveResources.mindMaps}" target="_blank" rel="noopener" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-emerald-100 flex items-center gap-1.5 transition-colors">
+                        <span>Drive Folder</span>
+                        <span>↗</span>
+                    </a>
+                    <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-emerald-100 text-sm font-bold">✕</button>
+                </div>
+            </div>
+
+            <!-- Tabs row -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 overflow-x-auto">
+                ${mindMapData.map(m => `
+                    <button onclick="window.openMindMapsModal('${m.id}')" class="filter-pill whitespace-nowrap ${m.id === currentMap.id ? 'active' : ''}">
+                        ${m.title}
+                    </button>
+                `).join('')}
+            </div>
+
+            <div class="modal-body p-6 overflow-y-auto space-y-5 bg-[#F9FAF8] dark:bg-slate-950">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-lg font-bold text-slate-900 dark:text-white">${currentMap.title}</h4>
+                        <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">${currentMap.unit}</span>
+                    </div>
+                    <span class="text-xs text-slate-500">${currentMap.nodes.length} Key Concept Clusters</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${currentMap.nodes.map((node, i) => `
+                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-emerald-600 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center justify-center">${i + 1}</span>
+                                    <h5 class="font-bold text-sm text-slate-800 dark:text-slate-100">${node.title}</h5>
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${node.desc}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-4">
+                    <div class="text-xs text-emerald-900 dark:text-emerald-200">
+                        <strong class="font-semibold">Need High-Res PDF Flowcharts?</strong> Download KV Rewari hand-drawn concept maps directly from Google Drive.
+                    </div>
+                    <a href="${googleDriveResources.mindMaps}" target="_blank" rel="noopener" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors whitespace-nowrap">
+                        Download PDFs ↗
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+    openModal(modalHtml, 'mindmaps-modal');
+}
+
+// Doubt Forum Module
+function openDoubtForumModal() {
+    let doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
+    if (doubts.length === 0) {
+        doubts = [
+            {
+                id: 'd1',
+                author: 'Aarav (Roll 04)',
+                topic: 'Python Lab',
+                time: 'Yesterday',
+                question: 'Why does range(1, 10, 2) stop at 9 and not include 10?',
+                answer: 'In Python, range(start, stop, step) creates a half-open interval [start, stop). The loop terminates before reaching or exceeding the stop bound, so 1, 3, 5, 7, 9 are produced.'
+            },
+            {
+                id: 'd2',
+                author: 'Priya (Roll 19)',
+                topic: 'Tuples vs Lists',
+                time: '2 days ago',
+                question: 'Can we change an element inside a tuple if that element is a list?',
+                answer: 'Yes! While the tuple container itself cannot add or replace elements, if an element inside is a mutable object (like a list), that nested list can still be modified in place.'
+            },
+            {
+                id: 'd3',
+                author: 'Rohan (Roll 27)',
+                topic: 'Boolean Logic',
+                time: '3 days ago',
+                question: 'How to quickly verify De Morgan\'s Law (A + B)\' = A\' . B\' in exams?',
+                answer: 'Draw a 4-row truth table for inputs A and B (00, 01, 10, 11). Compute column (A + B) then invert it. Separately compute A\' and B\', then compute A\' . B\'. Both resultant columns will be identical: [1, 0, 0, 0].'
+            }
+        ];
+        localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+    }
+
+    const modalHtml = `
+        <div class="modal-container max-w-4xl h-[88vh]">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-sm font-bold">💬</span>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Student Doubt & Discussion Forum</h3>
+                        <p class="text-xs text-emerald-200/80">Peer learning and teacher answers for Class 11 Computer Science</p>
+                    </div>
+                </div>
+                <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-emerald-100 text-sm font-bold">✕</button>
+            </div>
+
+            <div class="modal-body p-6 overflow-y-auto space-y-6 bg-[#F9FAF8] dark:bg-slate-950">
+                <!-- Ask a Doubt Box -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <span>✏️</span>
+                        <span>Post a Doubt or Discussion Question</span>
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input id="new-doubt-name" type="text" placeholder="Your Name / Roll No" class="text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                        <select id="new-doubt-topic" class="text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                            <option value="Python Basics">Python Basics</option>
+                            <option value="Control Flow">Control Flow & Loops</option>
+                            <option value="Strings & Lists">Strings, Lists, Tuples</option>
+                            <option value="Computer Systems">Computer Systems & Logic</option>
+                            <option value="Practical Exam">Practical Exam Prep</option>
+                        </select>
+                    </div>
+                    <textarea id="new-doubt-text" rows="2" placeholder="Describe your doubt or paste error message..." class="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"></textarea>
+                    <div class="flex justify-end">
+                        <button onclick="window.submitStudentDoubt()" class="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 transition-colors">
+                            Submit Doubt
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Doubt Feed -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">Recent Doubts & Solutions (${doubts.length})</h4>
+                    ${doubts.map(d => `
+                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-emerald-800 dark:text-emerald-300">${d.author}</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-400 font-medium">${d.topic}</span>
+                                </div>
+                                <span class="text-slate-400 text-[11px]">${d.time || 'Recently'}</span>
+                            </div>
+                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-100">${d.question}</p>
+                            ${d.answer ? `
+                                <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 mt-2">
+                                    <div class="font-bold text-[11px] text-emerald-800 dark:text-emerald-300 mb-1">✓ Teacher / Peer Solution:</div>
+                                    ${d.answer}
+                                </div>
+                            ` : `
+                                <div class="text-[11px] text-amber-600 dark:text-amber-400 italic">Awaiting teacher solution...</div>
+                            `}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    openModal(modalHtml, 'doubt-forum-modal');
+}
+
+function submitStudentDoubt() {
+    const nameInput = document.getElementById('new-doubt-name');
+    const topicSelect = document.getElementById('new-doubt-topic');
+    const textInput = document.getElementById('new-doubt-text');
+    if (!textInput || !textInput.value.trim()) {
+        alert('Please describe your doubt before submitting.');
+        return;
+    }
+    const doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
+    doubts.unshift({
+        id: 'd_' + Date.now(),
+        author: nameInput.value.trim() || 'Anonymous Student',
+        topic: topicSelect.value || 'Python',
+        time: 'Just now',
+        question: textInput.value.trim(),
+        answer: 'Thank you for asking! Your teacher or peer mentor will review and answer this shortly.'
+    });
+    localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+    openDoubtForumModal();
+}
+
+// Study Tracker Module
+function openStudyTrackerModal() {
+    let completedTopics = JSON.parse(localStorage.getItem('cs11_completed_topics') || '["cs-01", "cs-02"]');
+    const totalTopics = syllabusTopics.length || 8;
+    const progressPct = Math.round((completedTopics.length / totalTopics) * 100);
+
+    const modalHtml = `
+        <div class="modal-container max-w-3xl h-[86vh]">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-sm font-bold">⭐</span>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Class 11 CS Study Tracker</h3>
+                        <p class="text-xs text-emerald-200/80">Track chapter mastery, study streak & session focus</p>
+                    </div>
+                </div>
+                <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-emerald-100 text-sm font-bold">✕</button>
+            </div>
+
+            <div class="modal-body p-6 overflow-y-auto space-y-6 bg-[#F9FAF8] dark:bg-slate-950">
+                <!-- Progress Header -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Overall CBSE Syllabus Completion</span>
+                            <div class="text-2xl font-bold text-slate-900 dark:text-white">${progressPct}% Completed</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 font-bold">
+                                🔥 5-Day Study Streak
+                            </span>
+                        </div>
+                    </div>
+                    <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-600 rounded-full transition-all duration-300" style="width: ${progressPct}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-slate-500">
+                        <span>${completedTopics.length} of ${totalTopics} Syllabus Chapters Completed</span>
+                        <span>Session 2026–27</span>
+                    </div>
+                </div>
+
+                <!-- Chapter Checklist -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">Syllabus Chapters Checklist</h4>
+                    <div class="space-y-2">
+                        ${syllabusTopics.map((topic, i) => {
+                            const isDone = completedTopics.includes(topic.id);
+                            return `
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+                                    <label class="flex items-center gap-3 cursor-pointer flex-1">
+                                        <input type="checkbox" onchange="window.toggleTopicCompletion('${topic.id}')" ${isDone ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
+                                        <div>
+                                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 ${isDone ? 'line-through opacity-70' : ''}">${topic.title}</span>
+                                            <span class="text-[10px] text-slate-500 ml-2">(${topic.category})</span>
+                                        </div>
+                                    </label>
+                                    <button onclick="window.openChapterReader('${topic.id}')" class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
+                                        Read Notes →
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    openModal(modalHtml, 'study-tracker-modal');
+}
+
+function toggleTopicCompletion(topicId) {
+    let completedTopics = JSON.parse(localStorage.getItem('cs11_completed_topics') || '["cs-01", "cs-02"]');
+    if (completedTopics.includes(topicId)) {
+        completedTopics = completedTopics.filter(id => id !== topicId);
+    } else {
+        completedTopics.push(topicId);
+    }
+    localStorage.setItem('cs11_completed_topics', JSON.stringify(completedTopics));
+    openStudyTrackerModal();
+}
+
+// Chapter List Modal
+function openChapterListModal() {
+    const modalHtml = `
+        <div class="modal-container max-w-4xl h-[88vh]">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-sm font-bold">📑</span>
+                    <div>
+                        <h3 class="text-base font-bold text-white">CBSE Class 11 CS Chapter Directory</h3>
+                        <p class="text-xs text-emerald-200/80">Complete syllabus overview with marks weightage & periods</p>
+                    </div>
+                </div>
+                <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-emerald-100 text-sm font-bold">✕</button>
+            </div>
+
+            <div class="modal-body p-6 overflow-y-auto space-y-6 bg-[#F9FAF8] dark:bg-slate-950">
+                <!-- 3 Units Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    ${syllabusOverview.units.map(unit => `
+                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                            <div>
+                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 font-bold">Unit ${unit.unitNumber}</span>
+                                <h4 class="font-bold text-sm text-slate-900 dark:text-white mt-2">${unit.title}</h4>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">${unit.shortDesc}</p>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                                <span class="font-bold text-emerald-700 dark:text-emerald-400">${unit.marks} Marks</span>
+                                <span class="text-slate-500">${unit.periods.theory} Th + ${unit.periods.practical} Pr</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Individual Chapters -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">Detailed Topics & Practice Programs</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${syllabusTopics.map(t => `
+                            <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                                <div>
+                                    <div class="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold uppercase">${t.category}</div>
+                                    <div class="text-xs font-bold text-slate-900 dark:text-white">${t.title}</div>
+                                </div>
+                                <button onclick="window.openChapterReader('${t.id}')" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors whitespace-nowrap">
+                                    Explore →
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    openModal(modalHtml, 'chapter-list-modal');
+}
+
+// Study Library / Drive Resources Modal
+function openStudyLibraryModal() {
+    const modalHtml = `
+        <div class="modal-container max-w-4xl h-[88vh]">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-sm font-bold">📁</span>
+                    <div>
+                        <h3 class="text-base font-bold text-white">7 Official Google Drive Study Resources</h3>
+                        <p class="text-xs text-emerald-200/80">Curated by Neelima Ma'am (PGT CS) • PM SHRI KV Rewari</p>
+                    </div>
+                </div>
+                <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-emerald-100 text-sm font-bold">✕</button>
+            </div>
+
+            <div class="modal-body p-6 overflow-y-auto space-y-4 bg-[#F9FAF8] dark:bg-slate-950">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${studyLibraryResources.map(res => `
+                        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 font-bold">${res.order}</span>
+                                    <span class="text-[10px] text-slate-500 capitalize">${res.category}</span>
+                                </div>
+                                <h4 class="font-bold text-sm text-slate-900 dark:text-white">${res.title}</h4>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">${res.desc}</p>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <span class="text-[11px] text-slate-500">${res.fileCount || 'Multi-chapter'} files</span>
+                                <a href="${res.driveUrl}" target="_blank" rel="noopener" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors flex items-center gap-1">
+                                    <span>Open in Drive</span>
+                                    <span>↗</span>
+                                </a>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    openModal(modalHtml, 'resources-modal');
+}
+
+// --------------------------------------------------------------------------
+// Web Audio Lo-Fi Synth & Ambient Sound Player
+// --------------------------------------------------------------------------
+let lofiAudioCtx = null;
+let isLofiPlaying = false;
+let lofiGainNode = null;
+let lofiTimerInterval = null;
+let lofiSeconds = 42;
+let lofiTrackIdx = 0;
+
+const lofiPlaylist = [
+    { title: "lofi study beats", subtitle: "Chill Vibes", chord: [174.61, 220.00, 261.63, 329.63] }, // Fmaj7
+    { title: "midnight coding", subtitle: "Soft Rain", chord: [196.00, 233.08, 293.66, 349.23] }, // Gm7
+    { title: "forest ambient", subtitle: "Focus Mode", chord: [164.81, 196.00, 246.94, 293.66] }, // Em7
+    { title: "coffee shop lofi", subtitle: "Warm Chords", chord: [220.00, 261.63, 329.63, 392.00] } // Am7
+];
+
+function toggleLofiPlay() {
+    if (!lofiAudioCtx) {
+        lofiAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (lofiAudioCtx.state === 'suspended') {
+        lofiAudioCtx.resume();
+    }
+
+    if (!isLofiPlaying) {
+        startLofiAudio();
+    } else {
+        stopLofiAudio();
+    }
+}
+
+function startLofiAudio() {
+    isLofiPlaying = true;
+    const playerCard = document.getElementById('lofi-player-card');
+    const playBtn = document.getElementById('lofi-play-btn');
+    if (playerCard) playerCard.classList.add('lofi-playing');
+    if (playBtn) playBtn.innerHTML = '❚❚';
+
+    try {
+        lofiGainNode = lofiAudioCtx.createGain();
+        lofiGainNode.gain.setValueAtTime(0.08, lofiAudioCtx.currentTime);
+
+        const filter = lofiAudioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, lofiAudioCtx.currentTime);
+
+        const currentTrack = lofiPlaylist[lofiTrackIdx];
+        currentTrack.chord.forEach((freq) => {
+            const osc = lofiAudioCtx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, lofiAudioCtx.currentTime);
+            osc.connect(filter);
+            osc.start();
+        });
+
+        filter.connect(lofiGainNode);
+        lofiGainNode.connect(lofiAudioCtx.destination);
+    } catch (e) {
+        console.warn('Audio synthesis note:', e);
+    }
+
+    clearInterval(lofiTimerInterval);
+    lofiTimerInterval = setInterval(() => {
+        lofiSeconds = (lofiSeconds + 1) % 180;
+        const fill = document.getElementById('lofi-progress-fill');
+        if (fill) {
+            fill.style.width = ((lofiSeconds / 180) * 100) + '%';
+        }
+    }, 1000);
+}
+
+function stopLofiAudio() {
+    isLofiPlaying = false;
+    const playerCard = document.getElementById('lofi-player-card');
+    const playBtn = document.getElementById('lofi-play-btn');
+    if (playerCard) playerCard.classList.remove('lofi-playing');
+    if (playBtn) playBtn.innerHTML = '▶';
+
+    if (lofiGainNode) {
+        try {
+            lofiGainNode.gain.setTargetAtTime(0, lofiAudioCtx.currentTime, 0.05);
+        } catch (e) {}
+    }
+    clearInterval(lofiTimerInterval);
+}
+
+function nextLofiTrack() {
+    lofiTrackIdx = (lofiTrackIdx + 1) % lofiPlaylist.length;
+    updateLofiTrackUI();
+    if (isLofiPlaying) {
+        stopLofiAudio();
+        startLofiAudio();
+    }
+}
+
+function prevLofiTrack() {
+    lofiTrackIdx = (lofiTrackIdx - 1 + lofiPlaylist.length) % lofiPlaylist.length;
+    updateLofiTrackUI();
+    if (isLofiPlaying) {
+        stopLofiAudio();
+        startLofiAudio();
+    }
+}
+
+function updateLofiTrackUI() {
+    const track = lofiPlaylist[lofiTrackIdx];
+    const titleEl = document.getElementById('lofi-track-title');
+    const subEl = document.getElementById('lofi-track-sub');
+    if (titleEl) titleEl.textContent = track.title;
+    if (subEl) subEl.textContent = `— ${track.subtitle}`;
+}
+
+// --------------------------------------------------------------------------
+// Quote Rotator & Heart Encouragement
+// --------------------------------------------------------------------------
+const studyQuotes = [
+    { text: "Knowing yourself is the beginning of all wisdom.", author: "Aristotle" },
+    { text: "Small steps every day lead to big results.", author: "Unknown" },
+    { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
+    { text: "Simplicity is prerequisite for reliability.", author: "Edsger W. Dijkstra" },
+    { text: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
+    { text: "Make it work, make it right, make it fast.", author: "Kent Beck" },
+    { text: "Consistency is what transforms average into excellence.", author: "Anonymous" }
+];
+let quoteIdx = 0;
+
+function rotateDailyQuote() {
+    quoteIdx = (quoteIdx + 1) % studyQuotes.length;
+    const q = studyQuotes[quoteIdx];
+    const textEl = document.getElementById('quote-text');
+    const authorEl = document.getElementById('quote-author');
+    if (textEl && authorEl) {
+        textEl.style.opacity = '0';
+        authorEl.style.opacity = '0';
+        setTimeout(() => {
+            textEl.textContent = `"${q.text}"`;
+            authorEl.textContent = `— ${q.author}`;
+            textEl.style.opacity = '1';
+            authorEl.style.opacity = '1';
+        }, 150);
+    }
+}
+
+function cheerKeepGoing(e) {
+    let count = parseInt(localStorage.getItem('cs11_cheers') || '42') + 1;
+    localStorage.setItem('cs11_cheers', count.toString());
+
+    // Spawn floating heart
+    const heart = document.createElement('div');
+    heart.className = 'heart-float';
+    heart.textContent = '❤️';
+    const rect = e.currentTarget.getBoundingClientRect();
+    heart.style.left = (rect.left + rect.width / 2) + 'px';
+    heart.style.top = (rect.top - 10) + 'px';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 800);
+
+    const subEl = document.getElementById('cheer-sub-text');
+    if (subEl) {
+        subEl.textContent = `You're doing great! (${count} cheers)`;
+    }
+}
+
+// ==========================================================================
+// Utilities & Global Exports
+// ==========================================================================
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard successfully!');
+    }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Copied to clipboard!');
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeForAttribute(str) {
+    if (!str) return '';
+    return str
+        .replace(/\\/g, '\\\\')
+        .replace(/`/g, '\\`')
+        .replace(/\$/g, '\\$')
+        .replace(/"/g, '&quot;');
+}
+
+function setupKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            openSearchModal();
+        } else if (e.key === 'Escape' && state.activeModal) {
+            closeModal();
+        }
+    });
+}
+
 // Expose functions to window scope for onclick handlers
 function exposeGlobalFunctions() {
     window.toggleTheme = toggleTheme;
@@ -1779,4 +2448,18 @@ function exposeGlobalFunctions() {
     window.verifyAdminPin = verifyAdminPin;
     window.saveAdminSettings = saveAdminSettings;
     window.copyToClipboard = copyToClipboard;
+
+    // New Botanical Dashboard handlers
+    window.openMindMapsModal = openMindMapsModal;
+    window.openDoubtForumModal = openDoubtForumModal;
+    window.submitStudentDoubt = submitStudentDoubt;
+    window.openStudyTrackerModal = openStudyTrackerModal;
+    window.toggleTopicCompletion = toggleTopicCompletion;
+    window.openChapterListModal = openChapterListModal;
+    window.openStudyLibraryModal = openStudyLibraryModal;
+    window.toggleLofiPlay = toggleLofiPlay;
+    window.nextLofiTrack = nextLofiTrack;
+    window.prevLofiTrack = prevLofiTrack;
+    window.rotateDailyQuote = rotateDailyQuote;
+    window.cheerKeepGoing = cheerKeepGoing;
 }

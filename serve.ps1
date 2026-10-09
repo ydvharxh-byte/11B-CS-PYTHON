@@ -43,10 +43,11 @@ while ($listener.IsListening) {
         if ($path -eq "/api/visitor-count") {
             try {
                 $countFile = [System.IO.Path]::Combine($baseDir, "src", "data", "visitor_count.json")
-                $currentCount = 2845
+                $currentCount = 250
                 if (Test-Path $countFile) {
                     $jsonContent = Get-Content $countFile -Raw | ConvertFrom-Json
                     $currentCount = [int]$jsonContent.count
+                    if ($currentCount -lt 250) { $currentCount = 250 }
                 }
                 if ($request.QueryString["hit"] -eq "1") {
                     $currentCount += 1
@@ -59,7 +60,7 @@ while ($listener.IsListening) {
                 $response.ContentLength64 = $resBytes.Length
                 $response.OutputStream.Write($resBytes, 0, $resBytes.Length)
             } catch {
-                $errObj = @{ count = 2845; status = "fallback" }
+                $errObj = @{ count = 250; status = "fallback" }
                 $errBytes = [System.Text.Encoding]::UTF8.GetBytes((ConvertTo-Json $errObj))
                 $response.ContentType = "application/json; charset=utf-8"
                 $response.StatusCode = 200

@@ -26,12 +26,13 @@ function getLocalCount() {
     try {
         if (fs.existsSync(COUNT_FILE)) {
             const data = JSON.parse(fs.readFileSync(COUNT_FILE, 'utf8'));
-            return data.count || 2845;
+            const c = parseInt(data.count, 10);
+            return isNaN(c) || c < 250 ? 250 : c;
         }
     } catch (e) {
         console.error('Error reading count file:', e);
     }
-    return 2845;
+    return 250;
 }
 
 function setLocalCount(cnt) {
@@ -73,8 +74,9 @@ const server = http.createServer((req, res) => {
             hitRes.on('end', () => {
                 const match = svg.match(/hits:\s*([\d,]+)/i);
                 if (match && match[1]) {
-                    const onlineCount = parseInt(match[1].replace(/,/g, ''), 10);
-                    if (!isNaN(onlineCount) && onlineCount > 0) {
+                    const rawHits = parseInt(match[1].replace(/,/g, ''), 10) || 0;
+                    const onlineCount = 250 + rawHits;
+                    if (!isNaN(onlineCount) && onlineCount >= 250) {
                         setLocalCount(onlineCount);
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({ count: onlineCount, status: 'ok', source: 'hits.sh' }));
