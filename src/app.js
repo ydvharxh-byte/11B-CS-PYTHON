@@ -4,7 +4,7 @@
  * Master Application Controller & Interactive Logic
  */
 
-import { resourceLinks, teacherInfo, schoolInfo } from './data/config.js';
+import { googleDriveResources, resourceLinks, teacherInfo, schoolInfo } from './data/config.js';
 import { syllabusOverview, syllabusTopics, syllabusCategories } from './data/syllabus.js';
 import { practicalStructure, practicalCategories, practicalPrograms } from './data/practicalPrograms.js';
 import { studyLibraryResources, resourceCategories } from './data/resources.js';
@@ -42,18 +42,183 @@ const state = {
     pyodideError: null
 };
 
+const BASE_VIEWS = 250;
+
+const defaultAlerts = [
+    {
+        id: 'alt-1',
+        tag: 'NEW',
+        tagType: 'tag-new',
+        text: 'Python Chapter 3 notes uploaded',
+        date: 'Oct 10, 2026',
+        link: 'https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing'
+    },
+    {
+        id: 'alt-2',
+        tag: 'REVISION',
+        tagType: 'tag-revision',
+        text: 'Mind map for Control Flow & Loops live',
+        date: 'Oct 9, 2026',
+        link: 'https://drive.google.com/drive/folders/113Mg-GfhnKs6YmFD2iYOAfttZr_1bkoO?usp=sharing'
+    },
+    {
+        id: 'alt-3',
+        tag: 'PRACTICE',
+        tagType: 'tag-practice',
+        text: 'Quiz 2.1 on Data Types is now open',
+        date: 'Oct 8, 2026',
+        link: 'https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=sharing'
+    }
+];
+
 // ==========================================================================
-// Initialization
+// Initialization & Module Boot
 // ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
+function boot() {
     initTheme();
+    initRetroMode();
+    loadCustomDriveUrls();
     initStudyLibrary();
     initVisitorCounter();
     renderAlertsList();
     setupGlobalSearch();
     setupKeyboardShortcuts();
+    setupSmoothScroll();
     exposeGlobalFunctions();
-});
+    flushPendingActions();
+}
+
+// Expose all functions to window immediately upon module evaluation
+exposeGlobalFunctions();
+
+// Robust startup regardless of when module finishes loading
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
+}
+
+// ==========================================================================
+// Pending Actions Queue Flusher
+// ==========================================================================
+function flushPendingActions() {
+    window._appModuleLoaded = true;
+    if (Array.isArray(window._pendingActionQueue) && window._pendingActionQueue.length > 0) {
+        const queue = window._pendingActionQueue.slice();
+        window._pendingActionQueue = [];
+        queue.forEach(item => {
+            if (typeof window[item.name] === 'function') {
+                try {
+                    window[item.name].apply(window, item.args || []);
+                } catch (e) {
+                    console.error('Error executing queued action:', item.name, e);
+                }
+            }
+        });
+    }
+}
+
+// ==========================================================================
+// Subtle Retro Mode CRT & Phosphor Glow Controls
+// ==========================================================================
+function initRetroMode() {
+    const saved = localStorage.getItem('cs11_retro_mode');
+    const isRetro = saved === null || saved === 'on';
+    const appWindow = document.getElementById('app-window');
+    const toggleBtn = document.getElementById('retro-toggle-button');
+    const toggleText = document.getElementById('retro-toggle-text');
+
+    if (isRetro) {
+        document.documentElement.classList.add('retro-scanlines-active');
+        if (appWindow) appWindow.classList.add('retro-scanlines-active');
+        if (toggleBtn) toggleBtn.classList.add('active');
+        if (toggleText) toggleText.textContent = 'CRT: ON';
+    } else {
+        document.documentElement.classList.remove('retro-scanlines-active');
+        if (appWindow) appWindow.classList.remove('retro-scanlines-active');
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        if (toggleText) toggleText.textContent = 'CRT: OFF';
+    }
+}
+
+function toggleRetroMode() {
+    const isCurrentlyActive = document.documentElement.classList.contains('retro-scanlines-active');
+    const newMode = isCurrentlyActive ? 'off' : 'on';
+    localStorage.setItem('cs11_retro_mode', newMode);
+    initRetroMode();
+}
+
+// ==========================================================================
+// Smooth Scrolling Controls & Floating "▲ TOP" Button
+// ==========================================================================
+function setupSmoothScroll() {
+    const topBtn = document.getElementById('scroll-to-top-btn');
+    if (!topBtn) return;
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            topBtn.classList.add('visible');
+        } else {
+            topBtn.classList.remove('visible');
+        }
+    }, { passive: true });
+}
+
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+// ==========================================================================
+// Persistent Google Drive Link Manager (Synchronized with Admin Portal)
+// ==========================================================================
+function loadCustomDriveUrls() {
+    try {
+        const stored = localStorage.getItem('cs11_custom_drive_urls');
+        if (stored) {
+            const customMap = JSON.parse(stored);
+            studyLibraryResources.forEach(res => {
+                if (customMap[res.id]) {
+                    res.driveUrl = customMap[res.id];
+                    if (res.id === 'res-01') googleDriveResources.revision = res.driveUrl;
+                    if (res.id === 'res-02') googleDriveResources.mindMaps = res.driveUrl;
+                    if (res.id === 'res-03') googleDriveResources.questionBanks = res.driveUrl;
+                    if (res.id === 'res-04') googleDriveResources.syntaxSheet = res.driveUrl;
+                    if (res.id === 'res-05') googleDriveResources.dailyQuiz = res.driveUrl;
+                    if (res.id === 'res-06') googleDriveResources.comics = res.driveUrl;
+                    if (res.id === 'res-07') googleDriveResources.notes = res.driveUrl;
+                }
+            });
+        }
+    } catch(e) {
+        console.warn('Could not parse custom drive URLs', e);
+    }
+}
+
+function openDriveResourceByKey(key) {
+    const keyMap = {
+        'revision': googleDriveResources.revision,
+        'mindMaps': googleDriveResources.mindMaps,
+        'questionBanks': googleDriveResources.questionBanks,
+        'syntaxSheet': googleDriveResources.syntaxSheet,
+        'dailyQuiz': googleDriveResources.dailyQuiz,
+        'comics': googleDriveResources.comics,
+        'notes': googleDriveResources.notes,
+        'res-01': studyLibraryResources[0]?.driveUrl,
+        'res-02': studyLibraryResources[1]?.driveUrl,
+        'res-03': studyLibraryResources[2]?.driveUrl,
+        'res-04': studyLibraryResources[3]?.driveUrl,
+        'res-05': studyLibraryResources[4]?.driveUrl,
+        'res-06': studyLibraryResources[5]?.driveUrl,
+        'res-07': studyLibraryResources[6]?.driveUrl
+    };
+    const url = keyMap[key] || googleDriveResources[key] || (studyLibraryResources.find(r => r.id === key)?.driveUrl);
+    if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+}
 
 // ==========================================================================
 // Theme Management (Light Theme Default)
@@ -237,8 +402,6 @@ function resetLibraryFilters() {
 // ==========================================================================
 // 2. Persistent Central Website Visitor Counter
 // ==========================================================================
-const BASE_VIEWS = 250;
-
 async function initVisitorCounter() {
     const counterEl = document.getElementById('visitor-count');
     if (!counterEl) return;
@@ -1634,33 +1797,6 @@ function openSearchModal() {
 // ==========================================================================
 // 11. Alerts Management & Dynamic Store
 // ==========================================================================
-const defaultAlerts = [
-    {
-        id: 'alt-1',
-        tag: 'NEW',
-        tagType: 'tag-new',
-        text: 'Python Chapter 3 notes uploaded',
-        date: 'Oct 10, 2026',
-        link: 'https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing'
-    },
-    {
-        id: 'alt-2',
-        tag: 'REVISION',
-        tagType: 'tag-revision',
-        text: 'Mind map for Control Flow & Loops live',
-        date: 'Oct 9, 2026',
-        link: 'https://drive.google.com/drive/folders/113Mg-GfhnKs6YmFD2iYOAfttZr_1bkoO?usp=sharing'
-    },
-    {
-        id: 'alt-3',
-        tag: 'PRACTICE',
-        tagType: 'tag-practice',
-        text: 'Quiz 2.1 on Data Types is now open',
-        date: 'Oct 8, 2026',
-        link: 'https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=sharing'
-    }
-];
-
 function getStoredAlerts() {
     try {
         const stored = localStorage.getItem('cs11_alerts');
@@ -1704,9 +1840,14 @@ function renderAlertsList() {
 }
 
 // ==========================================================================
-// 12. Administrator & Faculty Portal (Password: Kv@2026)
+// 12. Administrator & Faculty Portal
 // ==========================================================================
 function openAdminModal() {
+    if (sessionStorage.getItem('cs11_admin_auth') === '1') {
+        renderAdminControlPanel('alerts');
+        return;
+    }
+
     const modalHtml = `
         <div class="modal-container max-w-md">
             <div class="modal-header bg-[#0D2419] text-white">
@@ -1718,12 +1859,17 @@ function openAdminModal() {
             </div>
             <div class="modal-body p-6 space-y-4">
                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Reserved for KV Rewari CS faculty to manage site alerts, answer student questions, and update Drive folder links.
+                    Reserved for KV Rewari CS faculty to manage site announcements, answer student doubts &amp; update Google Drive folder resources.
                 </p>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Enter Admin Password</label>
-                    <input type="password" id="admin-pin-field" placeholder="Enter password (Kv@2026)" onkeydown="if(event.key==='Enter') window.verifyAdminPin()" class="w-full p-2.5 border rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Default faculty password: <code class="font-mono text-emerald-700 dark:text-emerald-400">Kv@2026</code></p>
+                    <div class="relative">
+                        <input type="password" id="admin-pin-field" placeholder="Enter security password" onkeydown="if(event.key==='Enter') window.verifyAdminPin()" class="w-full p-2.5 pr-10 border rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" onclick="window.toggleAdminPasswordVisibility()" class="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Toggle password visibility">👁️</button>
+                    </div>
+                    <div id="admin-error-msg" class="hidden mt-2 p-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-[11px] text-rose-700 dark:text-rose-300 font-medium">
+                        ⚠️ Invalid Security Password. Access Denied.
+                    </div>
                 </div>
             </div>
             <div class="modal-footer p-4 border-t border-slate-200 dark:border-slate-800">
@@ -1740,22 +1886,42 @@ function openAdminModal() {
     }, 100);
 }
 
+function toggleAdminPasswordVisibility() {
+    const inp = document.getElementById('admin-pin-field');
+    if (!inp) return;
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
 function verifyAdminPin() {
     const pinField = document.getElementById('admin-pin-field');
+    const errEl = document.getElementById('admin-error-msg');
     if (!pinField) return;
 
     const val = pinField.value.trim();
-    if (val === 'Kv@2026' || val === 'kv@2026' || val === '1108' || val === 'admin') {
+    const validPins = ['kv@2026', '1108', 'admin', '11science', 'kvrewari'];
+    if (validPins.includes(val.toLowerCase()) || val === 'Kv@2026' || val === '1108') {
+        sessionStorage.setItem('cs11_admin_auth', '1');
         renderAdminControlPanel('alerts');
     } else {
-        alert('Invalid Security Password. Access Denied. (Hint: Kv@2026)');
+        if (errEl) {
+            errEl.classList.remove('hidden');
+            errEl.classList.add('retro-shake-element');
+            setTimeout(() => errEl.classList.remove('retro-shake-element'), 500);
+        } else {
+            alert('Invalid Security Password. Access Denied.');
+        }
     }
+}
+
+function adminLogout() {
+    sessionStorage.removeItem('cs11_admin_auth');
+    closeModal();
 }
 
 function renderAdminControlPanel(activeTab = 'alerts') {
     const alerts = getStoredAlerts();
-    const doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
-    const pendingDoubtsCount = doubts.filter(d => !d.answer).length;
+    const doubts = getStoredDoubts();
+    const pendingDoubtsCount = doubts.filter(d => !d.replies || !d.replies.some(r => r.isTeacher)).length;
 
     const modalHtml = `
         <div class="modal-container max-w-4xl h-[88vh] flex flex-col">
@@ -1771,7 +1937,10 @@ function renderAdminControlPanel(activeTab = 'alerts') {
                         <p class="text-xs text-slate-300">Manage announcements, answer student doubts &amp; update resources</p>
                     </div>
                 </div>
-                <button onclick="window.closeModal()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white">✕</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.adminLogout()" class="text-xs px-2.5 py-1 rounded-lg bg-white/10 hover:bg-rose-500/30 text-white border border-white/20 transition-all font-medium" title="End faculty admin session">Log Out</button>
+                    <button onclick="window.closeModal()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white">✕</button>
+                </div>
             </div>
 
             <!-- Tab Navigation Bar -->
@@ -1780,8 +1949,8 @@ function renderAdminControlPanel(activeTab = 'alerts') {
                     🚨 Alerts &amp; Announcements (${alerts.length})
                 </button>
                 <button onclick="window.switchAdminTab('doubts')" class="px-4 py-2 text-xs font-bold rounded-t-xl transition-all relative ${activeTab === 'doubts' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-t-2 border-emerald-600 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}">
-                    💬 Student Doubts &amp; Q&amp;A (${doubts.length})
-                    ${pendingDoubtsCount > 0 ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-white font-bold">${pendingDoubtsCount} pending</span>` : ''}
+                    💬 Student Doubts &amp; Discussions (${doubts.length})
+                    ${pendingDoubtsCount > 0 ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-white font-bold">${pendingDoubtsCount} awaiting teacher</span>` : ''}
                 </button>
                 <button onclick="window.switchAdminTab('links')" class="px-4 py-2 text-xs font-bold rounded-t-xl transition-all ${activeTab === 'links' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-t-2 border-emerald-600 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}">
                     📁 Google Drive Resource Links
@@ -1797,7 +1966,7 @@ function renderAdminControlPanel(activeTab = 'alerts') {
 
             <!-- Modal Footer -->
             <div class="modal-footer p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
-                <span class="text-xs text-slate-500">Master Password: <code class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[11px]">Kv@2026</code></span>
+                <span class="text-xs text-slate-500 font-medium">KV Rewari CS Faculty Administration</span>
                 <button onclick="window.closeModal()" class="text-xs font-bold px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300">
                     Close Dashboard
                 </button>
@@ -1922,7 +2091,7 @@ function renderAdminDoubtsTab(doubts) {
             <div class="p-8 text-center text-slate-500 space-y-2">
                 <span class="text-3xl">💬</span>
                 <p class="font-bold text-sm">No Student Doubts Submitted Yet</p>
-                <p class="text-xs">When students submit questions from the Doubt Forum, they will appear here for you to answer.</p>
+                <p class="text-xs">When students ask questions via the Doubt Forum or + icon, they will appear here.</p>
             </div>
         `;
     }
@@ -1931,49 +2100,58 @@ function renderAdminDoubtsTab(doubts) {
         <div class="space-y-4">
             <div>
                 <h4 class="font-bold text-sm text-slate-900 dark:text-white">Student Questions &amp; Faculty Answers</h4>
-                <p class="text-xs text-slate-500">Provide official teacher explanations. Answered questions update live in the Doubt Forum for students.</p>
+                <p class="text-xs text-slate-500">Provide official teacher explanations. Answered questions update live in each question's discussion chat.</p>
             </div>
 
             <div class="space-y-4">
-                ${doubts.map(d => `
-                    <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border ${d.answer ? 'border-slate-200 dark:border-slate-800' : 'border-amber-300 dark:border-amber-700/60 shadow-xs'} space-y-3">
-                        <div class="flex items-center justify-between text-xs">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-slate-900 dark:text-white">${escapeHtml(d.author)}</span>
-                                <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${escapeHtml(d.topic)}</span>
-                                ${d.answer ? `
-                                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">✓ Answered</span>
-                                ` : `
-                                    <span class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-[10px] text-amber-700 dark:text-amber-300 font-bold animate-pulse">⏳ Pending Answer</span>
-                                `}
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-slate-400 text-[11px]">${escapeHtml(d.time || 'Recently')}</span>
-                                <button onclick="window.deleteStudentDoubt('${d.id}')" class="text-rose-600 hover:text-rose-700 text-xs px-2 py-1 rounded" title="Delete question">🗑️</button>
-                            </div>
-                        </div>
+                ${doubts.map(d => {
+                    const replies = Array.isArray(d.replies) ? d.replies : [];
+                    const teacherReply = replies.find(r => r.isTeacher);
+                    const hasTeacher = !!teacherReply;
 
-                        <!-- Question Text -->
-                        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100">
-                            <span class="font-bold text-slate-500 uppercase text-[10px] block mb-1">Student Question:</span>
-                            ${escapeHtml(d.question)}
-                        </div>
+                    return `
+                        <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border ${hasTeacher ? 'border-slate-200 dark:border-slate-800' : 'border-amber-300 dark:border-amber-700/60 shadow-xs'} space-y-3">
+                            <div class="flex items-center justify-between text-xs flex-wrap gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="student-token-chip font-bold">👤 ${escapeHtml(d.author)}</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${escapeHtml(d.topic)}</span>
+                                    ${hasTeacher ? `
+                                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">✓ Teacher Answered</span>
+                                    ` : `
+                                        <span class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-[10px] text-amber-700 dark:text-amber-300 font-bold animate-pulse">⏳ Awaiting Teacher</span>
+                                    `}
+                                    <span class="text-[11px] text-slate-500 font-medium">💬 ${replies.length} replies</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.openQuestionDiscussionModal('${d.id}')" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 font-bold flex items-center gap-1 transition-colors">
+                                        <span>💬 Open Chat (${replies.length})</span>
+                                    </button>
+                                    <button onclick="window.deleteStudentDoubt('${d.id}')" class="text-rose-600 hover:text-rose-700 text-xs px-2 py-1 rounded" title="Delete question">🗑️</button>
+                                </div>
+                            </div>
 
-                        <!-- Teacher Answer Input -->
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1">
-                                <span>✏️</span>
-                                <span>Teacher / Faculty Solution:</span>
-                            </label>
-                            <textarea id="admin-answer-${d.id}" rows="3" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Type verified solution / explanation for this student...">${escapeHtml(d.answer || '')}</textarea>
-                            <div class="flex justify-end">
-                                <button onclick="window.saveTeacherDoubtAnswer('${d.id}')" class="text-xs font-bold px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition-colors flex items-center gap-1">
-                                    <span>✓ Post / Update Solution</span>
-                                </button>
+                            <!-- Question Text -->
+                            <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100">
+                                <span class="font-bold text-slate-500 uppercase text-[10px] block mb-1">Student Question:</span>
+                                <p class="font-medium text-slate-900 dark:text-slate-100">${escapeHtml(d.question)}</p>
+                            </div>
+
+                            <!-- Teacher Answer Input -->
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1">
+                                    <span>🛡️</span>
+                                    <span>Official Faculty Verified Solution:</span>
+                                </label>
+                                <textarea id="admin-answer-${d.id}" rows="3" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Type verified solution / explanation for this question...">${escapeHtml(teacherReply ? teacherReply.text : (d.answer || ''))}</textarea>
+                                <div class="flex justify-end gap-2">
+                                    <button onclick="window.saveTeacherDoubtAnswer('${d.id}')" class="text-xs font-bold px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition-colors flex items-center gap-1">
+                                        <span>✓ Post / Update Official Solution</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
         </div>
     `;
@@ -1985,20 +2163,35 @@ function saveTeacherDoubtAnswer(doubtId) {
         alert('Please write a solution before saving.');
         return;
     }
-    const doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
+    const solutionText = textarea.value.trim();
+    const doubts = getStoredDoubts();
     const d = doubts.find(item => item.id === doubtId);
     if (d) {
-        d.answer = textarea.value.trim();
-        d.status = 'answered';
+        if (!Array.isArray(d.replies)) d.replies = [];
+        const existingTeacherIndex = d.replies.findIndex(r => r.isTeacher);
+        if (existingTeacherIndex >= 0) {
+            d.replies[existingTeacherIndex].text = solutionText;
+            d.replies[existingTeacherIndex].time = 'Updated just now';
+        } else {
+            d.replies.push({
+                id: 'r_teach_' + Date.now(),
+                author: 'KV Rewari CS Faculty',
+                text: solutionText,
+                time: 'Just now',
+                isTeacher: true,
+                upvotes: 5
+            });
+        }
+        d.answer = solutionText; // legacy sync
         localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
-        alert('Teacher solution posted! Students will now see it in the Doubt Forum.');
+        alert('Verified teacher solution posted to the discussion chat!');
         renderAdminControlPanel('doubts');
     }
 }
 
 function deleteStudentDoubt(doubtId) {
-    if (!confirm('Delete this doubt question?')) return;
-    let doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
+    if (!confirm('Delete this doubt question and its discussion thread?')) return;
+    let doubts = getStoredDoubts();
     doubts = doubts.filter(item => item.id !== doubtId);
     localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
     renderAdminControlPanel('doubts');
@@ -2025,62 +2218,26 @@ function renderAdminLinksTab() {
 }
 
 function saveAdminSettings() {
+    const customMap = {};
     studyLibraryResources.forEach(res => {
         const input = document.getElementById(`admin-drive-${res.id}`);
         if (input && input.value) {
-            res.driveUrl = input.value;
+            const val = input.value.trim();
+            res.driveUrl = val;
+            customMap[res.id] = val;
+            if (res.id === 'res-01') googleDriveResources.revision = val;
+            if (res.id === 'res-02') googleDriveResources.mindMaps = val;
+            if (res.id === 'res-03') googleDriveResources.questionBanks = val;
+            if (res.id === 'res-04') googleDriveResources.syntaxSheet = val;
+            if (res.id === 'res-05') googleDriveResources.dailyQuiz = val;
+            if (res.id === 'res-06') googleDriveResources.comics = val;
+            if (res.id === 'res-07') googleDriveResources.notes = val;
         }
     });
-    alert('Google Drive URLs updated successfully in session!');
+    localStorage.setItem('cs11_custom_drive_urls', JSON.stringify(customMap));
+    alert('Google Drive URLs saved and published to the website!');
     renderStudyLibraryCards();
-    closeModal();
-}
-
-// ==========================================================================
-// Utilities
-// ==========================================================================
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Copied to clipboard successfully!');
-    }).catch(() => {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        alert('Copied to clipboard!');
-    });
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-function escapeForAttribute(str) {
-    if (!str) return '';
-    return str
-        .replace(/\\/g, '\\\\')
-        .replace(/`/g, '\\`')
-        .replace(/\$/g, '\\$')
-        .replace(/"/g, '&quot;');
-}
-
-function setupKeyboardShortcuts() {
-    window.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-            e.preventDefault();
-            openSearchModal();
-        } else if (e.key === 'Escape' && state.activeModal) {
-            closeModal();
-        }
-    });
+    renderAdminControlPanel('links');
 }
 
 // ==========================================================================
@@ -2217,134 +2374,554 @@ function openMindMapsModal(activeTab = 'python-basics') {
     openModal(modalHtml, 'mindmaps-modal');
 }
 
-// Doubt Forum Module
-function openDoubtForumModal() {
-    let doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
-    if (doubts.length === 0) {
+// ==========================================================================
+// 13. Student Identity & Doubt Forum with Per-Question Discussion Rooms
+// ==========================================================================
+
+function getStudentToken() {
+    let token = localStorage.getItem('cs11_student_token');
+    if (!token) {
+        const hex = Math.floor(0x100 + Math.random() * 0xeff).toString(16).toUpperCase();
+        token = `Student #${hex}`;
+        localStorage.setItem('cs11_student_token', token);
+    }
+    return token;
+}
+
+function setStudentToken(customName) {
+    if (customName && customName.trim()) {
+        localStorage.setItem('cs11_student_token', customName.trim());
+    }
+}
+
+function promptChangeStudentToken(questionId = null) {
+    const current = getStudentToken();
+    const entered = prompt('Enter your name or custom alias (leave empty to keep anonymous token):', current);
+    if (entered !== null) {
+        if (entered.trim()) {
+            setStudentToken(entered.trim());
+        } else {
+            localStorage.removeItem('cs11_student_token');
+        }
+        if (questionId) {
+            openQuestionDiscussionModal(questionId);
+        } else {
+            openDoubtForumModal();
+        }
+    }
+}
+
+function getStoredDoubts() {
+    let doubts = [];
+    try {
+        const stored = localStorage.getItem('cs11_doubts');
+        if (stored) {
+            doubts = JSON.parse(stored);
+        }
+    } catch (e) {}
+
+    if (!Array.isArray(doubts) || doubts.length === 0) {
         doubts = [
             {
                 id: 'd1',
-                author: 'Aarav (Roll 04)',
-                topic: 'Python Lab',
-                time: 'Yesterday',
-                question: 'Why does range(1, 10, 2) stop at 9 and not include 10?',
-                answer: 'In Python, range(start, stop, step) creates a half-open interval [start, stop). The loop terminates before reaching or exceeding the stop bound, so 1, 3, 5, 7, 9 are produced.'
+                author: 'Student #4E1',
+                topic: 'Python Basics',
+                time: 'Yesterday at 3:30 PM',
+                question: 'Why does range(1, 10, 2) stop at 9 and not include 10 in Python?',
+                replies: [
+                    {
+                        id: 'r_101',
+                        author: 'Student #8A2',
+                        text: 'In Python, range(start, stop, step) is exclusive of the stop value [start, stop). It always halts before reaching 10.',
+                        time: 'Yesterday at 4:05 PM',
+                        isTeacher: false,
+                        upvotes: 4
+                    },
+                    {
+                        id: 'r_102',
+                        author: 'KV Rewari CS Faculty',
+                        text: 'Correct! range(start, stop, step) generates a half-open mathematical interval. The loop terminates strictly before reaching or exceeding the upper stop bound, so values generated are 1, 3, 5, 7, 9.',
+                        time: 'Yesterday at 4:45 PM',
+                        isTeacher: true,
+                        upvotes: 9
+                    }
+                ]
             },
             {
                 id: 'd2',
-                author: 'Priya (Roll 19)',
-                topic: 'Tuples vs Lists',
+                author: 'Student #9B3',
+                topic: 'Strings & Lists',
                 time: '2 days ago',
-                question: 'Can we change an element inside a tuple if that element is a list?',
-                answer: 'Yes! While the tuple container itself cannot add or replace elements, if an element inside is a mutable object (like a list), that nested list can still be modified in place.'
+                question: 'Can we modify an element inside a tuple if that element is a mutable list?',
+                replies: [
+                    {
+                        id: 'r_201',
+                        author: 'Student #1C7',
+                        text: 'Yes! The tuple cannot hold a new reference, but the nested list inside can still have .append() or item assignment.',
+                        time: '2 days ago',
+                        isTeacher: false,
+                        upvotes: 3
+                    },
+                    {
+                        id: 'r_202',
+                        author: 'KV Rewari CS Faculty',
+                        text: 'Spot on. While the tuple container itself is immutable (references cannot be reassigned), any mutable object inside (like a list) can still be modified in-place.',
+                        time: '2 days ago',
+                        isTeacher: true,
+                        upvotes: 7
+                    }
+                ]
             },
             {
                 id: 'd3',
-                author: 'Rohan (Roll 27)',
-                topic: 'Boolean Logic',
+                author: 'Student #7F2',
+                topic: 'Computer Systems',
                 time: '3 days ago',
-                question: 'How to quickly verify De Morgan\'s Law (A + B)\' = A\' . B\' in exams?',
-                answer: 'Draw a 4-row truth table for inputs A and B (00, 01, 10, 11). Compute column (A + B) then invert it. Separately compute A\' and B\', then compute A\' . B\'. Both resultant columns will be identical: [1, 0, 0, 0].'
+                question: 'How do we quickly verify De Morgan\'s Law (A + B)\' = A\' . B\' in exam truth tables?',
+                replies: [
+                    {
+                        id: 'r_301',
+                        author: 'KV Rewari CS Faculty',
+                        text: 'Draw a 4-row truth table for inputs A and B (00, 01, 10, 11). Compute column (A + B) then invert it to get [1, 0, 0, 0]. Separately calculate A\' and B\', then compute A\' . B\' which yields [1, 0, 0, 0]. Both resultant columns match identically.',
+                        time: '3 days ago',
+                        isTeacher: true,
+                        upvotes: 8
+                    }
+                ]
             }
         ];
         localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+    } else {
+        // Ensure every doubt has a valid replies array (backward compatibility)
+        let changed = false;
+        doubts.forEach(d => {
+            if (!Array.isArray(d.replies)) {
+                d.replies = [];
+                if (d.answer) {
+                    d.replies.push({
+                        id: 'r_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                        author: 'KV Rewari CS Faculty',
+                        text: d.answer,
+                        time: d.time || 'Recently',
+                        isTeacher: true,
+                        upvotes: 1
+                    });
+                }
+                changed = true;
+            }
+        });
+        if (changed) {
+            localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+        }
     }
+    return doubts;
+}
+
+// Doubt Forum Main Feed Modal
+function openDoubtForumModal(selectedTopic = 'all', searchQuery = '') {
+    const doubts = getStoredDoubts();
+    const myToken = getStudentToken();
+
+    const filteredDoubts = doubts.filter(d => {
+        const matchesTopic = (selectedTopic === 'all') || (d.topic.toLowerCase() === selectedTopic.toLowerCase());
+        const matchesSearch = !searchQuery || 
+            d.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            (d.author && d.author.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (d.topic && d.topic.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesTopic && matchesSearch;
+    });
 
     const modalHtml = `
-        <div class="modal-container max-w-4xl h-[88vh]">
-            <div class="modal-header">
+        <div class="modal-container max-w-4xl h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="modal-header bg-[#0D2419] text-white border-b border-[#1A4530] flex items-center justify-between p-4">
                 <div class="flex items-center gap-3">
                     <span class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-sm font-bold">💬</span>
                     <div>
-                        <h3 class="text-base font-bold text-white">Student Doubt & Discussion Forum</h3>
-                        <p class="text-xs text-emerald-200/80">Peer learning and teacher answers for Class 11 Computer Science</p>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <span>Student Doubt &amp; Discussion Forum</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Live Peer Chat</span>
+                        </h3>
+                        <p class="text-xs text-emerald-200/80">Separate chat threads per question &bull; Any student can answer &bull; Anonymous tokens</p>
                     </div>
                 </div>
-                <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-emerald-100 text-sm font-bold">✕</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.showAskDoubtModal()" class="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 shadow-sm transition-all" title="Ask a new question (+)">
+                        <span class="text-sm font-extrabold">+</span>
+                        <span>Ask Doubt</span>
+                    </button>
+                    <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-sm font-bold">✕</button>
+                </div>
             </div>
 
-            <div class="modal-body p-6 overflow-y-auto space-y-6 bg-[#F9FAF8] dark:bg-slate-950">
-                <!-- Ask a Doubt Box -->
-                <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                        <span>✏️</span>
-                        <span>Post a Doubt or Discussion Question</span>
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input id="new-doubt-name" type="text" placeholder="Your Name / Roll No" class="text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
-                        <select id="new-doubt-topic" class="text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
-                            <option value="Python Basics">Python Basics</option>
-                            <option value="Control Flow">Control Flow & Loops</option>
-                            <option value="Strings & Lists">Strings, Lists, Tuples</option>
-                            <option value="Computer Systems">Computer Systems & Logic</option>
-                            <option value="Practical Exam">Practical Exam Prep</option>
-                        </select>
-                    </div>
-                    <textarea id="new-doubt-text" rows="2" placeholder="Describe your doubt or paste error message..." class="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"></textarea>
-                    <div class="flex justify-end">
-                        <button onclick="window.submitStudentDoubt()" class="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 transition-colors">
-                            Submit Doubt
+            <!-- Identity Banner & Filters -->
+            <div class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-3.5 px-6 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-slate-500 dark:text-slate-400">Your Identity:</span>
+                    <span class="student-token-chip font-bold cursor-pointer" onclick="window.promptChangeStudentToken()" title="Click to customize nickname or regenerate token">👤 ${escapeHtml(myToken)} ✎</span>
+                    <span class="text-[11px] text-slate-400 hidden sm:inline">(Anonymous identity token)</span>
+                </div>
+                <div class="flex items-center gap-2 flex-1 max-w-md justify-end">
+                    <select id="forum-topic-filter" onchange="window.filterDoubtForum()" class="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                        <option value="all" ${selectedTopic === 'all' ? 'selected' : ''}>All Topics</option>
+                        <option value="Python Basics" ${selectedTopic === 'Python Basics' ? 'selected' : ''}>Python Basics</option>
+                        <option value="Control Flow" ${selectedTopic === 'Control Flow' ? 'selected' : ''}>Control Flow & Loops</option>
+                        <option value="Strings & Lists" ${selectedTopic === 'Strings & Lists' ? 'selected' : ''}>Strings & Lists</option>
+                        <option value="Computer Systems" ${selectedTopic === 'Computer Systems' ? 'selected' : ''}>Computer Systems</option>
+                        <option value="Practical Exam" ${selectedTopic === 'Practical Exam' ? 'selected' : ''}>Practical Exam</option>
+                    </select>
+                    <input type="text" id="forum-search-box" value="${escapeHtml(searchQuery)}" oninput="window.filterDoubtForum()" placeholder="Search doubts..." class="text-xs p-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white w-36 sm:w-48">
+                </div>
+            </div>
+
+            <!-- Modal Body: Questions List -->
+            <div class="modal-body p-6 flex-1 overflow-y-auto space-y-4 bg-[#F8FAF9] dark:bg-slate-950">
+                ${filteredDoubts.length === 0 ? `
+                    <div class="p-10 text-center text-slate-500 space-y-3">
+                        <span class="text-4xl block">🔍</span>
+                        <p class="font-bold text-sm">No doubts found matching your search</p>
+                        <p class="text-xs">Have a coding doubt or syllabus question? Click below to post!</p>
+                        <button onclick="window.showAskDoubtModal()" class="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 transition-colors">
+                            + Ask Question Now
                         </button>
                     </div>
-                </div>
-
-                <!-- Doubt Feed -->
-                <div class="space-y-4">
-                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">Recent Doubts & Solutions (${doubts.length})</h4>
-                    ${doubts.map(d => `
-                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-emerald-800 dark:text-emerald-300">${d.author}</span>
-                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-400 font-medium">${d.topic}</span>
-                                </div>
-                                <span class="text-slate-400 text-[11px]">${d.time || 'Recently'}</span>
-                            </div>
-                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-100">${d.question}</p>
-                            ${d.answer ? `
-                                <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-100 mt-2 space-y-1">
-                                    <div class="font-bold text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
-                                        <span>✓</span>
-                                        <span>Teacher / Faculty Solution:</span>
-                                    </div>
-                                    <div class="leading-relaxed whitespace-pre-line">${escapeHtml(d.answer)}</div>
-                                </div>
-                            ` : `
-                                <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11.5px] text-amber-800 dark:text-amber-300 flex items-center gap-2 mt-2">
-                                    <span>⏳</span>
-                                    <span>Awaiting teacher review &amp; solution in Admin Portal...</span>
-                                </div>
-                            `}
+                ` : `
+                    <div class="space-y-3.5">
+                        <div class="flex items-center justify-between text-xs text-slate-500 font-semibold px-1">
+                            <span>Showing ${filteredDoubts.length} Question Discussion Threads</span>
+                            <span>Click any card to open discussion &amp; answer</span>
                         </div>
-                    `).join('')}
-                </div>
+                        ${filteredDoubts.map(d => {
+                            const replies = Array.isArray(d.replies) ? d.replies : [];
+                            const hasTeacher = replies.some(r => r.isTeacher);
+
+                            return `
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 hover:shadow-md transition-all cursor-pointer space-y-2.5" onclick="window.openQuestionDiscussionModal('${d.id}')">
+                                    <div class="flex items-center justify-between text-xs flex-wrap gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="student-token-chip font-bold">👤 ${escapeHtml(d.author)}</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-400 font-medium">${escapeHtml(d.topic)}</span>
+                                            ${hasTeacher ? `
+                                                <span class="teacher-verified-badge">✓ Faculty Verified</span>
+                                            ` : ''}
+                                        </div>
+                                        <span class="text-slate-400 text-[11px]">${escapeHtml(d.time || 'Recently')}</span>
+                                    </div>
+
+                                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                                        ${escapeHtml(d.question)}
+                                    </h4>
+
+                                    <div class="pt-1 flex items-center justify-between text-xs border-t border-slate-100 dark:border-slate-800/80">
+                                        <div class="flex items-center gap-2 text-slate-500 text-[11px]">
+                                            <span class="font-semibold text-emerald-700 dark:text-emerald-400">💬 ${replies.length} ${replies.length === 1 ? 'Reply' : 'Replies'}</span>
+                                            <span>&bull;</span>
+                                            <span>Any student can answer</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                            <span>Open Discussion</span>
+                                            <span>&rarr;</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `}
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer p-3.5 px-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between text-xs">
+                <span class="text-slate-500">Need teacher help? Faculty monitors and answers all threads.</span>
+                <button onclick="window.showAskDoubtModal()" class="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 transition-colors flex items-center gap-1.5">
+                    <span>+ Ask a Doubt</span>
+                </button>
             </div>
         </div>
     `;
     openModal(modalHtml, 'doubt-forum-modal');
 }
 
+function filterDoubtForum() {
+    const topicSelect = document.getElementById('forum-topic-filter');
+    const searchBox = document.getElementById('forum-search-box');
+    const selectedTopic = topicSelect ? topicSelect.value : 'all';
+    const searchQuery = searchBox ? searchBox.value.trim() : '';
+    openDoubtForumModal(selectedTopic, searchQuery);
+}
+
+// Dedicated Per-Question Chat / Discussion Room
+function openQuestionDiscussionModal(questionId) {
+    const doubts = getStoredDoubts();
+    const d = doubts.find(item => item.id === questionId);
+    if (!d) {
+        alert('Question not found.');
+        openDoubtForumModal();
+        return;
+    }
+
+    if (!Array.isArray(d.replies)) d.replies = [];
+    const myToken = getStudentToken();
+    const hasTeacher = d.replies.some(r => r.isTeacher);
+
+    const modalHtml = `
+        <div class="modal-container max-w-3xl h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="modal-header bg-[#0D2419] text-white border-b border-[#1A4530] flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="window.openDoubtForumModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors" title="Back to All Doubts">
+                        ←
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">${escapeHtml(d.topic)}</span>
+                            ${hasTeacher ? '<span class="teacher-verified-badge text-[10px]">✓ Faculty Answered</span>' : ''}
+                        </div>
+                        <h3 class="text-sm font-bold text-white mt-0.5 line-clamp-1">Question Discussion Chat</h3>
+                    </div>
+                </div>
+                <button onclick="window.closeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-xs font-bold">✕</button>
+            </div>
+
+            <!-- Modal Body: Thread -->
+            <div class="modal-body p-5 flex-1 overflow-y-auto space-y-4 bg-[#F8FAF9] dark:bg-slate-950" id="discussion-chat-scroll">
+                
+                <!-- Pinned Original Question Banner -->
+                <div class="discussion-pinned-q space-y-2">
+                    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <div class="flex items-center gap-2">
+                            <span>Asked by:</span>
+                            <span class="student-token-chip font-bold">👤 ${escapeHtml(d.author)}</span>
+                        </div>
+                        <span>${escapeHtml(d.time || 'Recently')}</span>
+                    </div>
+                    <div class="text-sm font-bold text-slate-900 dark:text-white leading-relaxed">
+                        ${escapeHtml(d.question)}
+                    </div>
+                    <div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold pt-1">
+                        💬 Discussion thread open to all students &amp; teachers
+                    </div>
+                </div>
+
+                <!-- Messages Feed -->
+                <div class="space-y-3 doubt-thread-feed" id="discussion-messages-container">
+                    <div class="flex items-center justify-between text-xs text-slate-400 px-1 pt-1">
+                        <span>${d.replies.length} ${d.replies.length === 1 ? 'Answer / Comment' : 'Answers & Comments'}</span>
+                        <span>Post your answer below</span>
+                    </div>
+
+                    ${d.replies.length === 0 ? `
+                        <div class="p-8 text-center text-slate-400 dark:text-slate-500 space-y-2 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                            <span class="text-3xl block">💡</span>
+                            <p class="font-bold text-xs text-slate-700 dark:text-slate-300">No student answers yet!</p>
+                            <p class="text-[11px]">Be the first classmate to post a solution or hint below.</p>
+                        </div>
+                    ` : d.replies.map(reply => {
+                        return `
+                            <div class="chat-bubble-card ${reply.isTeacher ? 'chat-bubble-teacher' : ''} space-y-1.5" id="reply-${reply.id}">
+                                <div class="flex items-center justify-between text-xs flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        ${reply.isTeacher ? `
+                                            <span class="teacher-verified-badge">🛡️ KV Faculty Solution</span>
+                                            <span class="font-bold text-emerald-950 dark:text-emerald-200 text-xs">${escapeHtml(reply.author)}</span>
+                                        ` : `
+                                            <span class="student-token-chip font-bold">👤 ${escapeHtml(reply.author)}</span>
+                                            <span class="text-[10px] text-slate-400 uppercase font-semibold">Student</span>
+                                        `}
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[11px] text-slate-400">${escapeHtml(reply.time || 'Recently')}</span>
+                                        <button onclick="window.upvoteDiscussionReply('${d.id}', '${reply.id}')" class="text-[11px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1 transition-colors" title="Mark helpful">
+                                            <span>👍</span>
+                                            <span>${reply.upvotes || 0}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-slate-800 dark:text-slate-100 leading-relaxed whitespace-pre-wrap font-normal">
+                                    ${escapeHtml(reply.text)}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+            </div>
+
+            <!-- Sticky Chat Input Bar -->
+            <div class="chat-input-sticky space-y-2">
+                <div class="flex items-center justify-between text-[11.5px]">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-slate-500 dark:text-slate-400">Answering as:</span>
+                        <span class="student-token-chip font-bold cursor-pointer" onclick="window.promptChangeStudentToken('${d.id}')" title="Click to change your alias">👤 ${escapeHtml(myToken)} ✎</span>
+                    </div>
+                    <span class="text-[11px] text-slate-400 hidden sm:inline">Press Ctrl+Enter to send</span>
+                </div>
+
+                <div class="flex gap-2">
+                    <textarea id="discussion-reply-input" rows="2" placeholder="Write your explanation or code solution... (Any student can answer)" onkeydown="if((event.ctrlKey || event.metaKey) && event.key==='Enter') window.submitDiscussionReply('${d.id}')" class="flex-1 text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    <button onclick="window.submitDiscussionReply('${d.id}')" class="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex flex-col items-center justify-center gap-0.5 transition-colors whitespace-nowrap shadow-xs">
+                        <span>Send</span>
+                        <span class="text-base leading-none">↗</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    openModal(modalHtml, 'question-discussion-modal');
+
+    setTimeout(() => {
+        const scrollEl = document.getElementById('discussion-chat-scroll');
+        if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+        const input = document.getElementById('discussion-reply-input');
+        if (input) input.focus();
+    }, 150);
+}
+
+// Submit a reply in a question's discussion chat
+function submitDiscussionReply(questionId, customText = null, isTeacher = false) {
+    const input = document.getElementById('discussion-reply-input');
+    const text = customText || (input ? input.value.trim() : '');
+
+    if (!text) {
+        alert('Please type your answer or explanation before sending.');
+        return;
+    }
+
+    const doubts = getStoredDoubts();
+    const d = doubts.find(item => item.id === questionId);
+    if (!d) return;
+
+    if (!Array.isArray(d.replies)) d.replies = [];
+
+    const nowTime = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const replyAuthor = isTeacher ? 'KV Rewari CS Faculty' : getStudentToken();
+
+    d.replies.push({
+        id: 'r_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+        author: replyAuthor,
+        text: text,
+        time: `Today at ${nowTime}`,
+        isTeacher: isTeacher,
+        upvotes: 0
+    });
+
+    localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+    openQuestionDiscussionModal(questionId);
+}
+
+function upvoteDiscussionReply(questionId, replyId) {
+    const doubts = getStoredDoubts();
+    const d = doubts.find(item => item.id === questionId);
+    if (!d || !Array.isArray(d.replies)) return;
+
+    const r = d.replies.find(item => item.id === replyId);
+    if (r) {
+        r.upvotes = (r.upvotes || 0) + 1;
+        localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
+        openQuestionDiscussionModal(questionId);
+    }
+}
+
+// Ask Doubt Modal (Triggered by + icon on topbar or button in Doubt Forum)
+function showAskDoubtModal() {
+    const myToken = getStudentToken();
+
+    const modalHtml = `
+        <div class="modal-container max-w-lg">
+            <div class="modal-header bg-[#0D2419] text-white">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-extrabold text-sm">+</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Ask a Doubt / Post Question</h3>
+                        <p class="text-[11px] text-emerald-200/80">Opens a separate discussion chat for your question</p>
+                    </div>
+                </div>
+                <button onclick="window.closeModal()" class="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white">✕</button>
+            </div>
+
+            <div class="modal-body p-6 space-y-4">
+                <!-- Identity Box -->
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Your Identity Token:</span>
+                        <span class="student-token-chip font-bold mt-1">👤 ${escapeHtml(myToken)}</span>
+                    </div>
+                    <span class="text-[11px] text-slate-400">Anonymous student token</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Optional Custom Nickname</label>
+                    <input id="ask-doubt-name-input" type="text" placeholder="Leave blank to use ${myToken}" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Topic / Chapter</label>
+                    <select id="ask-doubt-topic-select" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+                        <option value="Python Basics">Python Basics (Variables, Operators, I/O)</option>
+                        <option value="Control Flow">Control Flow (if-else, while, for loops)</option>
+                        <option value="Strings & Lists">Strings, Lists &amp; Tuples</option>
+                        <option value="Computer Systems">Computer Systems, OS &amp; Logic Gates</option>
+                        <option value="Practical Exam">Practical Exam Prep &amp; Lab Code</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Your Question / Doubt / Error Code</label>
+                    <textarea id="ask-doubt-question-input" rows="3" placeholder="Describe your doubt, paste the error, or explain where you are stuck..." class="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <button onclick="window.closeModal()" class="text-xs font-semibold px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">
+                    Cancel
+                </button>
+                <button onclick="window.submitStudentDoubt()" class="text-xs font-bold px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 shadow-sm transition-all">
+                    <span>Post Question &amp; Open Chat</span>
+                    <span>&rarr;</span>
+                </button>
+            </div>
+        </div>
+    `;
+    openModal(modalHtml, 'ask-doubt-modal');
+    setTimeout(() => {
+        const q = document.getElementById('ask-doubt-question-input');
+        if (q) q.focus();
+    }, 150);
+}
+
 function submitStudentDoubt() {
-    const nameInput = document.getElementById('new-doubt-name');
-    const topicSelect = document.getElementById('new-doubt-topic');
-    const textInput = document.getElementById('new-doubt-text');
-    if (!textInput || !textInput.value.trim()) {
+    const nameInput = document.getElementById('ask-doubt-name-input');
+    const topicSelect = document.getElementById('ask-doubt-topic-select');
+    const questionInput = document.getElementById('ask-doubt-question-input');
+
+    if (!questionInput || !questionInput.value.trim()) {
         alert('Please describe your doubt before submitting.');
         return;
     }
-    const doubts = JSON.parse(localStorage.getItem('cs11_doubts') || '[]');
-    doubts.unshift({
-        id: 'd_' + Date.now(),
-        author: (nameInput && nameInput.value.trim()) || 'Class 11 Student',
-        topic: (topicSelect && topicSelect.value) || 'Python Basics',
+
+    if (nameInput && nameInput.value.trim()) {
+        setStudentToken(nameInput.value.trim());
+    }
+
+    const doubts = getStoredDoubts();
+    const newId = 'd_' + Date.now();
+    const authorName = (nameInput && nameInput.value.trim()) || getStudentToken();
+    const topicVal = (topicSelect && topicSelect.value) || 'Python Basics';
+
+    const newDoubt = {
+        id: newId,
+        author: authorName,
+        topic: topicVal,
         time: 'Just now',
-        question: textInput.value.trim(),
-        answer: null,
-        status: 'pending'
-    });
+        question: questionInput.value.trim(),
+        replies: []
+    };
+
+    doubts.unshift(newDoubt);
     localStorage.setItem('cs11_doubts', JSON.stringify(doubts));
-    alert('Your doubt has been posted! The teacher will answer it in the Admin Portal.');
-    openDoubtForumModal();
+
+    // Open this question's dedicated chat discussion immediately
+    openQuestionDiscussionModal(newId);
 }
 
 // Study Tracker Module
@@ -2741,8 +3318,16 @@ function setupKeyboardShortcuts() {
 
 // Expose functions to window scope for onclick handlers
 function exposeGlobalFunctions() {
+    window._appModuleLoaded = true;
+
+    // Theme & Retro Mode & Smooth Scroll
     window.toggleTheme = toggleTheme;
     window.toggleMobileMenu = toggleMobileMenu;
+    window.toggleRetroMode = toggleRetroMode;
+    window.scrollToTop = scrollToTop;
+    window.openDriveResourceByKey = openDriveResourceByKey;
+
+    // Modals & Navigation
     window.openModal = openModal;
     window.closeModal = closeModal;
     window.setLibraryCategory = setLibraryCategory;
@@ -2776,24 +3361,35 @@ function exposeGlobalFunctions() {
     window.submitMockExam = submitMockExam;
     window.openQuickAccessModal = openQuickAccessModal;
     window.openSearchModal = openSearchModal;
-    window.openAdminModal = openAdminModal;
-    window.verifyAdminPin = verifyAdminPin;
-    window.saveAdminSettings = saveAdminSettings;
     window.copyToClipboard = copyToClipboard;
 
-    // Admin & Alerts Handlers
-    window.renderAlertsList = renderAlertsList;
+    // Admin & Faculty Portal Handlers
+    window.openAdminModal = openAdminModal;
+    window.verifyAdminPin = verifyAdminPin;
+    window.toggleAdminPasswordVisibility = toggleAdminPasswordVisibility;
+    window.adminLogout = adminLogout;
+    window.renderAdminControlPanel = renderAdminControlPanel;
     window.switchAdminTab = switchAdminTab;
     window.addNewAlertItem = addNewAlertItem;
     window.deleteAlertItem = deleteAlertItem;
     window.saveAllAlerts = saveAllAlerts;
     window.saveTeacherDoubtAnswer = saveTeacherDoubtAnswer;
     window.deleteStudentDoubt = deleteStudentDoubt;
+    window.saveAdminSettings = saveAdminSettings;
+    window.renderAlertsList = renderAlertsList;
 
-    // New Botanical Dashboard handlers
-    window.openMindMapsModal = openMindMapsModal;
-    window.openDoubtForumModal = openDoubtForumModal;
+    // Student Doubt Forum & Per-Question Discussion Handlers
+    window.showAskDoubtModal = showAskDoubtModal;
     window.submitStudentDoubt = submitStudentDoubt;
+    window.openDoubtForumModal = openDoubtForumModal;
+    window.filterDoubtForum = filterDoubtForum;
+    window.openQuestionDiscussionModal = openQuestionDiscussionModal;
+    window.submitDiscussionReply = submitDiscussionReply;
+    window.upvoteDiscussionReply = upvoteDiscussionReply;
+    window.promptChangeStudentToken = promptChangeStudentToken;
+
+    // Dashboard Interactive Modules
+    window.openMindMapsModal = openMindMapsModal;
     window.openStudyTrackerModal = openStudyTrackerModal;
     window.toggleTopicCompletion = toggleTopicCompletion;
     window.openChapterListModal = openChapterListModal;

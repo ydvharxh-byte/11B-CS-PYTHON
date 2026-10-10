@@ -9,6 +9,7 @@
     <!-- Immediate Synchronous Theme Script (Ensures 0ms lag, no white flash, instant button response) -->
     <script>
         (function() {
+            // 1. Theme Management (0ms lag, no white flash)
             const savedTheme = localStorage.getItem('cs11_theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             const activeTheme = savedTheme || (prefersDark ? 'dark' : 'light');
@@ -47,6 +48,33 @@
                     }
                 }
             }
+
+            // 2. Retro Mode (Default: ON for subtle vintage CRT scanline feel)
+            const savedRetro = localStorage.getItem('cs11_retro_mode');
+            const isRetroActive = savedRetro === null || savedRetro === 'on';
+            if (isRetroActive) {
+                document.documentElement.classList.add('retro-scanlines-active');
+            }
+
+            // 3. Instant Action Queue: Guarantees zero dropped clicks for Admin & Doubt buttons
+            window._pendingActionQueue = [];
+            const criticalActions = [
+                'openAdminModal', 'showAskDoubtModal', 'openDoubtForumModal', 
+                'openQuestionDiscussionModal', 'openSearchModal', 'openStudyTrackerModal',
+                'openMindMapsModal', 'openChapterReader', 'openPythonLab', 
+                'openPracticeCentre', 'openChapterListModal', 'openStudyLibraryModal',
+                'verifyAdminPin', 'toggleRetroMode', 'scrollToTop'
+            ];
+
+            criticalActions.forEach(function(fnName) {
+                window[fnName] = function() {
+                    const args = Array.prototype.slice.call(arguments);
+                    if (window._appModuleLoaded && window[fnName] && window[fnName] !== arguments.callee) {
+                        return window[fnName].apply(window, args);
+                    }
+                    window._pendingActionQueue.push({ name: fnName, args: args });
+                };
+            });
 
             document.addEventListener('DOMContentLoaded', function() {
                 const isDark = document.documentElement.classList.contains('dark');
@@ -144,6 +172,11 @@
                     <span class="text-amber-300 font-medium">CS (Unofficial Hub)</span>
                 </div>
 
+                <button class="retro-toggle-btn active" id="retro-toggle-button" onclick="window.toggleRetroMode()" title="Toggle Subtle Retro CRT Scanlines & Phosphor Accent">
+                    <span class="retro-led-dot"></span>
+                    <span id="retro-toggle-text">CRT: ON</span>
+                </button>
+
                 <!-- Download IDLE Option -->
                 <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" class="download-idle-pill" title="Download Python IDLE from python.org">
                     <svg class="w-3.5 h-3.5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -155,7 +188,7 @@
                 </a>
 
                 <!-- Faculty & Admin Portal Button -->
-                <button class="admin-portal-pill" onclick="window.openAdminModal()" title="Faculty &amp; Admin Portal (Password: Kv@2026)">
+                <button class="admin-portal-pill" onclick="window.openAdminModal()" title="Faculty &amp; Admin Portal">
                     <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
@@ -301,6 +334,13 @@
                             NCERT notes, Python practice, mind maps, quizzes and 7 Google Drive study resources &mdash; all in one place.
                         </p>
 
+                        <!-- Retro Terminal Prompt Accent -->
+                        <div class="retro-terminal-prompt font-mono my-3.5">
+                            <span class="prompt-symbol">❯_</span>
+                            <span class="prompt-command">python3 -m cbse.cs11 --interactive</span>
+                            <span class="retro-cursor">▌</span>
+                        </div>
+
                         <div>
                             <button class="hero-cta-btn" onclick="document.getElementById('core-sections').scrollIntoView({behavior: 'smooth'})">
                                 <span>Start Exploring</span>
@@ -342,7 +382,7 @@
                     <!-- 8 Core Cards in Image 1 Format & Design -->
                     <div class="core-cards-grid">
                         <!-- Card 1: Revision & Important Topics -->
-                        <div class="core-card-item" onclick="window.open('https://drive.google.com/drive/folders/1oe7AQFV4nwjeGI4hvKzvQgQLTszxYFSd?usp=sharing', '_blank')">
+                        <div class="core-card-item" onclick="window.openDriveResourceByKey('revision')">
                             <div class="card-icon-square">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
@@ -357,11 +397,11 @@
                         </div>
 
                         <!-- Card 2: Mind Maps -->
-                        <div class="core-card-item" onclick="window.open('https://drive.google.com/drive/folders/113Mg-GfhnKs6YmFD2iYOAfttZr_1bkoO?usp=sharing', '_blank')">
+                        <div class="core-card-item" onclick="window.openDriveResourceByKey('mindMaps')">
                             <div class="card-icon-square">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0 1.51 1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                                 </svg>
                             </div>
                             <div>
@@ -372,7 +412,7 @@
                         </div>
 
                         <!-- Card 3: Important Questions & Question Banks -->
-                        <div class="core-card-item" onclick="window.open('https://drive.google.com/drive/folders/1aIJBU5Yj-G-GcmRKYfk5d3EUVak7Z4wz?usp=sharing', '_blank')">
+                        <div class="core-card-item" onclick="window.openDriveResourceByKey('questionBanks')">
                             <div class="card-icon-square">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
@@ -388,7 +428,7 @@
                         </div>
 
                         <!-- Card 4: Formula, Syntax & Definitions -->
-                        <div class="core-card-item" onclick="window.open('https://drive.google.com/drive/folders/1Za5mPzf3rV6SkvZfJ3n_7OZzpFjyHlvw?usp=sharing', '_blank')">
+                        <div class="core-card-item" onclick="window.openDriveResourceByKey('syntaxSheet')">
                             <div class="card-icon-square">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                                     <polyline points="16 18 22 12 16 6"></polyline>
@@ -403,7 +443,7 @@
                         </div>
 
                         <!-- Card 5: Daily Quiz -->
-                        <div class="core-card-item" onclick="window.open('https://drive.google.com/drive/folders/1Z-tWMvfyVBRNYTXz3jyaT238hkviQbwQ?usp=sharing', '_blank')">
+                        <div class="core-card-item" onclick="window.openDriveResourceByKey('dailyQuiz')">
                             <div class="card-icon-square">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -417,7 +457,7 @@
                         </div>
 
                         <!-- Card 6: Comics -->
-                        <div class="core-card-item" onclick="window.open('https://drive.google.com/drive/folders/1AT-FTi7FTUK6RpMHSPXDBjaUK1KC1XUW?usp=sharing', '_blank')">
+                        <div class="core-card-item" onclick="window.openDriveResourceByKey('comics')">
                             <div class="card-icon-square">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
@@ -434,7 +474,7 @@
                         </div>
 
                         <!-- Card 7: Chapter Notes & PDFs -->
-                        <div class="core-card-item" onclick="window.open('https://drive.google.com/drive/folders/15Ux9MYwerFRbc1iXsVsx6s2iWgiOUXwj?usp=sharing', '_blank')">
+                        <div class="core-card-item" onclick="window.openDriveResourceByKey('notes')">
                             <div class="card-icon-square">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -479,7 +519,7 @@
                                 3 Active
                             </span>
                         </div>
-                        <a href="javascript:void(0)" onclick="window.openAdminModal()" class="view-all-link" title="Manage alerts in Admin Portal (Password: Kv@2026)">
+                        <a href="javascript:void(0)" onclick="window.openAdminModal()" class="view-all-link" title="Manage alerts in Admin Portal">
                             <span>Manage / Admin</span>
                             <span>&rarr;</span>
                         </a>
@@ -654,6 +694,12 @@
 
     <!-- DYNAMIC MODAL LAYER CONTAINER -->
     <div id="modal-root"></div>
+
+    <!-- FLOATING RETRO SMOOTH SCROLL TOP BUTTON -->
+    <button class="retro-scroll-top-btn" id="scroll-to-top-btn" onclick="window.scrollToTop()" title="Smooth Scroll to Top (Retro ▲)" aria-label="Scroll to top">
+        <span>▲</span>
+        <span>TOP</span>
+    </button>
 
     <!-- MAIN JAVASCRIPT CONTROLLER -->
     <script type="module" src="./src/app.js"></script>
