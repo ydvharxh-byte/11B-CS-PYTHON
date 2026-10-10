@@ -153,13 +153,22 @@ function toggleRetroMode() {
 // ==========================================================================
 function setupSmoothScroll() {
     const topBtn = document.getElementById('scroll-to-top-btn');
-    if (!topBtn) return;
+    const dockHomeBtn = document.getElementById('mobile-dock-home');
 
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) {
-            topBtn.classList.add('visible');
-        } else {
-            topBtn.classList.remove('visible');
+        if (topBtn) {
+            if (window.scrollY > 300) {
+                topBtn.classList.add('visible');
+            } else {
+                topBtn.classList.remove('visible');
+            }
+        }
+        if (dockHomeBtn) {
+            if (window.scrollY < 240) {
+                dockHomeBtn.classList.add('active');
+            } else {
+                dockHomeBtn.classList.remove('active');
+            }
         }
     }, { passive: true });
 }
@@ -257,11 +266,31 @@ function toggleThemeIcons(isDark) {
     }
 }
 
-function toggleMobileMenu() {
-    const drawer = document.getElementById('mobile-drawer');
-    if (drawer) {
-        drawer.classList.toggle('hidden');
+function toggleMobileDrawer() {
+    const overlay = document.getElementById('mobile-drawer-overlay');
+    if (!overlay) return;
+    const isHidden = overlay.classList.contains('hidden');
+    if (isHidden) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('active'), 10);
+        document.body.style.overflow = 'hidden';
+    } else {
+        closeMobileDrawer();
     }
+}
+
+function closeMobileDrawer() {
+    const overlay = document.getElementById('mobile-drawer-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    setTimeout(() => {
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }, 280);
+}
+
+function toggleMobileMenu() {
+    toggleMobileDrawer();
 }
 
 // ==========================================================================
@@ -3320,9 +3349,11 @@ function setupKeyboardShortcuts() {
 function exposeGlobalFunctions() {
     window._appModuleLoaded = true;
 
-    // Theme & Retro Mode & Smooth Scroll
+    // Theme & Retro Mode & Smooth Scroll & Mobile Navigation
     window.toggleTheme = toggleTheme;
     window.toggleMobileMenu = toggleMobileMenu;
+    window.toggleMobileDrawer = toggleMobileDrawer;
+    window.closeMobileDrawer = closeMobileDrawer;
     window.toggleRetroMode = toggleRetroMode;
     window.scrollToTop = scrollToTop;
     window.openDriveResourceByKey = openDriveResourceByKey;

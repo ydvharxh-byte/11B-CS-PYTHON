@@ -63,7 +63,8 @@
                 'openQuestionDiscussionModal', 'openSearchModal', 'openStudyTrackerModal',
                 'openMindMapsModal', 'openChapterReader', 'openPythonLab', 
                 'openPracticeCentre', 'openChapterListModal', 'openStudyLibraryModal',
-                'verifyAdminPin', 'toggleRetroMode', 'scrollToTop'
+                'verifyAdminPin', 'toggleRetroMode', 'scrollToTop',
+                'toggleMobileDrawer', 'closeMobileDrawer'
             ];
 
             criticalActions.forEach(function(fnName) {
@@ -132,7 +133,7 @@
 
         <!-- 1. TOP WINDOW BAR (BROWSER SHELL LOOK) -->
         <header class="window-topbar">
-            <!-- Left: macOS Traffic Dots & Navigation Arrows -->
+            <!-- Left: macOS Traffic Dots & Navigation Arrows (Desktop) & Mobile Brand Emblem -->
             <div class="topbar-left">
                 <div class="window-traffic-dots">
                     <span class="traffic-dot dot-close" title="Scroll to Top" onclick="window.scrollTo({top:0, behavior:'smooth'})"></span>
@@ -151,6 +152,11 @@
                         </svg>
                     </button>
                 </div>
+                <!-- Mobile Brand Emblem (Visible on <= 768px) -->
+                <div class="mobile-brand-emblem" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                    <span class="text-base">🌱</span>
+                    <span class="mobile-brand-title">11 Science CS</span>
+                </div>
             </div>
 
             <!-- Center: URL Address Bar Pill -->
@@ -166,6 +172,14 @@
 
             <!-- Right: Class Tag (Unofficial Hub), Dark/Light Mode, Student Profile Avatar -->
             <div class="topbar-right">
+                <!-- Mobile Search Tap Target -->
+                <button class="mobile-search-pill" onclick="window.openSearchModal()" title="Search Portal (Ctrl+K)" aria-label="Search">
+                    <svg class="w-3.5 h-3.5 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+
                 <div class="hidden sm:flex items-center class-tag">
                     <span>Class 11</span>
                     <span class="class-tag-divider">|</span>
@@ -692,6 +706,117 @@
         </div>
     </footer>
 
+    <!-- MOBILE EXPLORE BOTTOM SHEET DRAWER (FOR SMARTPHONES) -->
+    <div id="mobile-drawer-overlay" class="mobile-drawer-overlay hidden" onclick="window.closeMobileDrawer()">
+        <div class="mobile-drawer-sheet" onclick="event.stopPropagation()">
+            <!-- Sheet Drag Handle Bar -->
+            <div class="sheet-drag-handle-wrap">
+                <div class="sheet-drag-handle"></div>
+            </div>
+
+            <!-- Drawer Header -->
+            <div class="mobile-drawer-header">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-700/20 text-emerald-400 flex items-center justify-center text-base">🌱</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">11 Science CS Hub</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Class 11 Computer Science (083)</p>
+                    </div>
+                </div>
+                <button onclick="window.closeMobileDrawer()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold" aria-label="Close menu">✕</button>
+            </div>
+
+            <!-- Quick Search Bar in Drawer -->
+            <div class="px-4 pb-2">
+                <button onclick="window.closeMobileDrawer(); window.openSearchModal();" class="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center gap-2.5 text-xs text-slate-500 dark:text-slate-400">
+                    <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Search notes, codes & Drive folders...</span>
+                </button>
+            </div>
+
+            <!-- Grid of All Academic Modules -->
+            <div class="mobile-drawer-content p-4 space-y-4 overflow-y-auto max-h-[68vh]">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Study Modules</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="window.closeMobileDrawer(); window.openChapterReader();" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">📖</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Chapter Reader</span>
+                                <span class="text-[10px] text-slate-500">Unit 1 & Unit 2</span>
+                            </div>
+                        </button>
+                        <button onclick="window.closeMobileDrawer(); window.openPracticalsHub();" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">💻</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Practicals Hub</span>
+                                <span class="text-[10px] text-slate-500">30 CBSE Programs</span>
+                            </div>
+                        </button>
+                        <button onclick="window.closeMobileDrawer(); window.openMindMapsModal();" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">🧠</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Mind Maps</span>
+                                <span class="text-[10px] text-slate-500">Visual Summaries</span>
+                            </div>
+                        </button>
+                        <button onclick="window.closeMobileDrawer(); window.openMockExam();" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">⏱️</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Mock Exam</span>
+                                <span class="text-[10px] text-slate-500">Timed 70M Test</span>
+                            </div>
+                        </button>
+                        <button onclick="window.closeMobileDrawer(); window.openQuickAccessModal('syntax-sheet');" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400">📝</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Syntax Sheet</span>
+                                <span class="text-[10px] text-slate-500">Methods & Operators</span>
+                            </div>
+                        </button>
+                        <button onclick="window.closeMobileDrawer(); window.openQuickAccessModal('important-topics');" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">🚀</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">High-Yield</span>
+                                <span class="text-[10px] text-slate-500">Important Topics</span>
+                            </div>
+                        </button>
+                        <button onclick="window.closeMobileDrawer(); window.openDoubtForumModal();" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400">💬</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Doubt Forum</span>
+                                <span class="text-[10px] text-slate-500">Q&A Discussions</span>
+                            </div>
+                        </button>
+                        <button onclick="window.closeMobileDrawer(); window.openStudyTrackerModal();" class="drawer-module-card">
+                            <span class="drawer-icon-box bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">📊</span>
+                            <div class="text-left">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Study Tracker</span>
+                                <span class="text-[10px] text-slate-500">Check Progress</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Utility Toggles -->
+                <div class="p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.toggleTheme()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 shadow-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <span>🌙 Light/Dark</span>
+                        </button>
+                        <button onclick="window.toggleRetroMode()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 shadow-xs font-semibold text-emerald-700 dark:text-emerald-300 font-mono text-[11px] flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>CRT</span>
+                        </button>
+                    </div>
+                    <button onclick="window.closeMobileDrawer(); window.openAdminModal();" class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-bold text-[11px]">
+                        🛡️ Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- DYNAMIC MODAL LAYER CONTAINER -->
     <div id="modal-root"></div>
 
@@ -700,6 +825,47 @@
         <span>▲</span>
         <span>TOP</span>
     </button>
+
+    <!-- MOBILE BOTTOM NAVIGATION DOCK (VISIBLE ON <= 860px) -->
+    <nav class="mobile-bottom-dock" id="mobile-bottom-dock" aria-label="Mobile Navigation">
+        <button class="mobile-dock-btn active" onclick="window.scrollTo({top:0, behavior:'smooth'})" id="mobile-dock-home" aria-label="Home">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span class="dock-label">Home</span>
+        </button>
+        <button class="mobile-dock-btn" onclick="window.openStudyLibraryModal()" id="mobile-dock-library" aria-label="Library">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span class="dock-label">Library</span>
+        </button>
+        <button class="mobile-dock-btn mobile-dock-center" onclick="window.openPythonLab()" id="mobile-dock-lab" aria-label="Python Lab">
+            <div class="dock-fab-circle">
+                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+            </div>
+            <span class="dock-label">Lab</span>
+        </button>
+        <button class="mobile-dock-btn" onclick="window.openPracticeCentre()" id="mobile-dock-practice" aria-label="Practice">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="12 8 8 12 12 16 16 12 12 8"></polygon>
+            </svg>
+            <span class="dock-label">Practice</span>
+        </button>
+        <button class="mobile-dock-btn" onclick="window.toggleMobileDrawer()" id="mobile-dock-menu" aria-label="Menu">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="18" x2="20" y2="18"></line>
+            </svg>
+            <span class="dock-label">Explore</span>
+        </button>
+    </nav>
 
     <!-- MAIN JAVASCRIPT CONTROLLER -->
     <script type="module" src="./src/app.js"></script>
